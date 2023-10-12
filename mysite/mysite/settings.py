@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "polls.apps.PollsConfig",
+    "attendance.apps.AttendanceConfig",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,9 +79,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'railway',
         "USER": "postgres",
-        "PASSWORD": "Kx2XeqWMNEMV1KWTtzY6",
-        "HOST": "containers-us-west-96.railway.app",
-        "PORT": "5656",
+        "PASSWORD": "xpfQhSguWq0F2z7OEQ3q",
+        "HOST": "containers-us-west-84.railway.app",
+        "PORT": "6841",
     }
 }
 
