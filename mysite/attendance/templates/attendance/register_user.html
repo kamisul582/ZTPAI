@@ -15,7 +15,7 @@
         
         <div class="login-panel-container">
         <div class="welcome">Register User</div>
-            <form class="register" action="{% url 'attendance:register_user' question.id %}" method="post">
+            <form class="register" action="{% url 'attendance:register_user' %}" method="post">
                 {% csrf_token %}    
                 <div class="login-container">
                     <div> email </div>
