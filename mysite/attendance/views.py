@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import User, Company
-
+import random, string
 # Create your views here.
 def index(request):
     #return HttpResponse("Hello, world. You're at the attendance index.")
@@ -28,13 +28,31 @@ def user_creation(request, _email, _password, _name, _surname, _employer):
     #user = User(email = email, password = password, name = name, surname = surname, employer = employer)
     #context = {"email": email,"password": password,"name": name,"surname": surname,"employer": employer,}
     print(request, _email, _password, _name, _surname, _employer)
+    code = generate_kiosk_code(_employer)
     user = User.objects.create(email = _email,
                                password = _password,
                                name = _name,
                                surname = _surname,
-                               employer = Company.objects.get(pk = _employer))
+                               employer = Company.objects.get(pk = _employer),
+                               kiosk_code = code)
     print(user)
-    #return render(request, "attendance/user_main_page.html", context)
+    
+
+def generate_kiosk_code(_employer):
+    users = User.objects.filter(employer=_employer)
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    codes = []
+    i=0
+    while i<20:
+        for user in users:
+            codes.append(user.kiosk_code)
+        
+        if code in codes:
+            i+=1
+        else:
+            return code
+    
+   
 def user_main_page(request,user_id):
     user = User.objects.get(pk=user_id)
     context = {"user": user}

@@ -12,7 +12,7 @@ class Company(models.Model):
 class User(models.Model):
    
     def __str__(self) -> str:
-        return self.email + " " + self.name + " " + self.surname
+        return self.email + " " + self.name + " " + self.surname + " " + self.kiosk_code
     email = models.CharField(max_length=200)
     password = models.CharField(max_length=200)
     name = models.CharField(max_length=200)
