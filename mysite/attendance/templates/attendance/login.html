@@ -12,8 +12,8 @@
             <img src="public/img/logo.svg">
         </div>
         <div class="login-panel-container">
-            <form class="login" action="login_trigger" method="POST">
-                
+            <form class="login" action="{% url 'attendance:login' %}" method="post">
+                {% csrf_token %}
                 <div class="welcome">Welcome!</div>
                 <div class="login-container">
                     <div> email </div>

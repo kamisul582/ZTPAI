@@ -14,8 +14,8 @@
         </div>
         <div class="login-panel-container">
         <div class="welcome">Register Company</div>
-            <form class="register" action="register_company" method="POST">
-                            
+            <form class="register" action="{% url 'attendance:register_company' %}" method="post">
+                {% csrf_token %}           
                 
                 <div class="login-container">
                     <div> email </div>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="login-container">
                     <div> password </div>
-                    <input name="confirmedPassword" type="password" placeholder="confirm password">
+                    <input name="confirmed_password" type="password" placeholder="confirm password">
                 </div>
                 <div class="login-container">
                     <div> company name </div>
@@ -39,10 +39,12 @@
                </div>
                 
                 <button type="submit">REGISTER</button>
+                {{message}}
             </form>
+            
             <div class="register-links">
                     <a href="register_user">Register as worker</a>
-                    <a href="log_out">Log in</a>
+                    <a href="login">Log in</a>
                 </div>
             <div class="messages">
                     <?php if(isset($messages)){

@@ -10,19 +10,44 @@ def index(request):
 def login(request):
     print(request)
     print("test login")
+    if request.method == "GET":
+        return render(request, "attendance/login.html")
+    elif request.method == "POST":
+        dictionary = request.POST
+        print(dictionary)
+        if 'login_as_company' in dictionary.keys():
+            print('company login')
     return render(request, "attendance/login.html")
-
 def register_user(request):
     if request.method == "GET":
         return render(request, "attendance/register_user.html")
     elif request.method == "POST":
         dictionary = request.POST
+        if dictionary['password'] != dictionary['confirmed_password']:
+            print(dictionary['password'], dictionary['confirmed_password'])
+            context = {"message": "passwords do not match"}
+            return render(request, "attendance/register_user.html",context)
         user_creation(request,dictionary['email'],dictionary['password'],dictionary['name'],dictionary['surname'],dictionary['employer_id'])
-    return render(request, "attendance/register_user.html")
+    context = {"message": "User registered"}
+    return render(request, "attendance/register_user.html",context)
     
 
 def register_company(request):
-    return render(request, "attendance/register_company.html")
+    if request.method == "GET":
+        return render(request, "attendance/register_company.html")
+    elif request.method == "POST":
+        dictionary = request.POST
+        if dictionary['password'] != dictionary['confirmed_password']:
+            print(dictionary['password'], dictionary['confirmed_password'])
+            context = {"message": "passwords do not match"}
+            return render(request, "attendance/register_company.html",context)
+        company = Company.objects.create(email = dictionary['email'],
+                               password =dictionary['password'],
+                               company_name = dictionary['company_name'],
+                               company_address = dictionary['company_address'])
+        print(company)
+    context = {"message": "Company registered"}
+    return render(request, "attendance/register_company.html",context)
 
 def user_creation(request, _email, _password, _name, _surname, _employer):
     #user = User(email = email, password = password, name = name, surname = surname, employer = employer)

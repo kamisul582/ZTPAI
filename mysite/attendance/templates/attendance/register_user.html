@@ -27,7 +27,7 @@
                 </div>
                 <div class="login-container">
                     <div> password </div>
-                    <input name="confirmedPassword" type="password" placeholder="confirm password">
+                    <input name="confirmed_password" type="password" placeholder="confirm password">
                 </div>
                 <div class="login-container">
                     <div> name </div>
@@ -43,10 +43,11 @@
                 </div>
                 
                 <button type="submit">REGISTER</button>
+                {{message}}
             </form>
             <div class="register-links">
                     <a href="register_company">Register as company</a>
-                    <a href="log_out">Log in</a>
+                    <a href="login">Log in</a>
                 </div>
             <div class="messages">
                     <?php if(isset($messages)){
