@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth import authenticate
 from .models import User, Company
 import random, string
 import json
@@ -18,20 +19,19 @@ def login(request):
         print(dictionary)
         if 'login_as_company' in dictionary.keys():
             print('company login')
+    user = authenticate(email = dictionary['email'], password = dictionary['password'])
+    if user is not None:
+        print("logged in")
+    else:
+        print("user not found")
     return render(request, "attendance/login.html")
 def register_user(request):
     if request.method == "GET":
         return render(request, "attendance/register_user.html")
     elif request.method == "POST":
-        dictionary = request.POST
-        #data = json.load(request)
-        print("_______")
-        #print(data)
-        print("_______")
-        #post_data = json.loads(request.body.decode("utf-8"))
-        #print(post_data)
         
-        print(dictionary,dictionary.keys(),dictionary.items())
+        dictionary = request.POST
+        print(dictionary)
         if dictionary['password'] != dictionary['confirmed_password']:
             print(dictionary['password'], dictionary['confirmed_password'])
             context = {"message": "passwords do not match"}
@@ -87,7 +87,7 @@ def generate_kiosk_code(_employer):
         else:
             return code
     
-   
+
 def user_main_page(request,user_id):
     user = User.objects.get(pk=user_id)
     context = {"user": user}
