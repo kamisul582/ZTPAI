@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import User, Company
 import random, string
+import json
 # Create your views here.
 def index(request):
     #return HttpResponse("Hello, world. You're at the attendance index.")
@@ -23,13 +24,22 @@ def register_user(request):
         return render(request, "attendance/register_user.html")
     elif request.method == "POST":
         dictionary = request.POST
+        #data = json.load(request)
+        print("_______")
+        #print(data)
+        print("_______")
+        #post_data = json.loads(request.body.decode("utf-8"))
+        #print(post_data)
+        
+        print(dictionary,dictionary.keys(),dictionary.items())
         if dictionary['password'] != dictionary['confirmed_password']:
             print(dictionary['password'], dictionary['confirmed_password'])
             context = {"message": "passwords do not match"}
             return render(request, "attendance/register_user.html",context)
         user_creation(request,dictionary['email'],dictionary['password'],dictionary['name'],dictionary['surname'],dictionary['employer_id'])
     context = {"message": "User registered"}
-    return render(request, "attendance/register_user.html",context)
+    #return render(request, "attendance/register_user.html",context)
+    return JsonResponse(context, safe=False)
     
 
 def register_company(request):
