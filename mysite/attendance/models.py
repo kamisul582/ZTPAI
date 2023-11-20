@@ -20,4 +20,10 @@ class User(models.Model):
     employer  = models.ForeignKey(Company, on_delete=models.CASCADE)
     kiosk_code = models.CharField(max_length=10)
 
+class WorkTime(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add = True, blank=True)
+    punch_in = models.DateField(blank=True)
+    punch_out = models.DateField(blank=True)
+    total_time = models.DateField(blank=True)
 # Create your models here.

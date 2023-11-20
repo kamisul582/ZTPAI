@@ -75,7 +75,6 @@
                   .then(response => response.json())
                   .then(data => {
                     console.log('Success:', data);
-                    print("User registered")
                     document.getElementById("message").innerHTML = "User registered";
                   })
                   .catch(error => {
