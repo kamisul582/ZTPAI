@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
 from .models import User, Company
 import random, string
 import json
@@ -19,12 +20,13 @@ def login(request):
         print(dictionary)
         if 'login_as_company' in dictionary.keys():
             print('company login')
-    user = authenticate(email = dictionary['email'], password = dictionary['password'])
+    user = authenticate(username = dictionary['email'], password = dictionary['password'])
+    print(user)
     if user is not None:
         print("logged in")
     else:
         print("user not found")
-    return render(request, "attendance/login.html")
+    return render(request, "attendance/user_main_page.html")
 def register_user(request):
     if request.method == "GET":
         return render(request, "attendance/register_user.html")
@@ -87,11 +89,11 @@ def generate_kiosk_code(_employer):
         else:
             return code
     
-
+@login_required(login_url="/attendance/login")
 def user_main_page(request,user_id):
     user = User.objects.get(pk=user_id)
     context = {"user": user}
-    return render(request, "attendance/user_main_page.html", context)
+    return render(request, f"attendance/{user_id}/user_main_page.html", context)
 
 def user_info(request, user_id):
     user = User.objects.get(pk=user_id)

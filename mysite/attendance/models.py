@@ -10,11 +10,13 @@ class Company(models.Model):
     company_address = models.CharField(max_length=200)
 
 class User(models.Model):
-   
+    REQUIRED_FIELDS = ('user',)
+    USERNAME_FIELD = 'email'
+    is_anonymous = False
     def __str__(self) -> str:
         return self.email + " " + self.name + " " + self.surname + " " + self.kiosk_code
-    email = models.CharField(max_length=200)
-    password = models.CharField(max_length=200)
+    email = models.CharField(max_length=200, default=False,)
+    password = models.CharField(max_length=200, default=False)
     name = models.CharField(max_length=200)
     surname = models.CharField(max_length=200)
     employer  = models.ForeignKey(Company, on_delete=models.CASCADE)
