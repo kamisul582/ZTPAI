@@ -1,0 +1,85 @@
+<div id="container">
+{% extends 'shared_layout/base.html' %}
+
+{%block contents%}
+
+
+<h1>Worktime Entries for {{ user.username }}</h1>
+<h1>Kiosk Code {{ worker.kiosk_code }}</h1>
+<h1>Firstname {{ worker.firstname }}</h1>
+<h1>Lastname {{ worker.lastname }}</h1>
+<!-- Display user information -->
+<h1>Worktime Entries for {{ company.name }}</h1>
+<p><strong>User ID:</strong> {{ user.id }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<!-- Add more user attributes as needed -->
+
+<h2>Worktime Entries</h2>
+
+{% if worktime_entries %}
+<div id="worktime_table_container">
+    <table id="worktime_table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Punch In</th>
+                <th>Punch Out</th>
+                <th>Total Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in worktime_entries %}
+                <tr>
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.punch_in }}</td>
+                    <td>{{ entry.punch_out }}</td>
+                    <td>{{ entry.total_time}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+<script>
+    // Scroll to the bottom of the table container
+    var container = document.getElementById('worktime_table_container');
+    container.scrollTop = container.scrollHeight;
+</script>
+{% else %}
+    <p>No worktime entries available.</p>
+{% endif %}
+<button id="updateWorktimeButton">Update Worktime</button>
+
+<script>
+    $(document).ready(function() {
+        $('#updateWorktimeButton').on('click', function() {
+            // Make an AJAX request to the Django view
+            const csrftoken = Cookies.get('csrftoken');
+            $.ajax({
+                type: 'POST',
+                url: '{% url "attendance:add_worktime" %}',  // Replace with the actual URL name of your update_worktime view
+                data: {
+                    user_id: '{{ user.id }}',  // Replace with the actual user ID or how you obtain it in your context
+                    'csrfmiddlewaretoken': csrftoken
+                },
+                dataType: 'json',
+                success: function (data) {
+                    
+                    if (data.status === 'success') {
+                        // Optional: Display a success message or perform other actions
+                        location.reload();
+                        // Assuming you have an HTML element with the ID 'worktime_table'
+
+                        // Update the table with the new entry
+                    } else {
+                        // Handle errors if needed
+                    }
+                },
+                error: function () {
+                    // Handle errors if needed
+                }
+            });
+        });
+    });
+    </script>
+{%endblock contents%}

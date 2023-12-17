@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-2">
+    <a class="navbar-brand" href="{%url 'attendance:home'%}">LOGIN SYSTEM</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        {%if user.is_authenticated%}
+        <li class="nav-item">
+            <a class="nav-link" href="{%url 'attendance:home'%}">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{%url 'attendance:add_data'%}">Add Data</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{%url 'attendance:create_company'%}">Create Company</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{%url 'attendance:logout'%}">Logout</a>
+        </li>
+        {%else%}
+        <li class="nav-item">
+            <a class="nav-link" href="{%url 'attendance:login'%}">Login</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{%url 'attendance:register'%}">register</a>
+        </li>
+        {%endif%}
+      </ul>
+    </div>
+  </nav>
+  
