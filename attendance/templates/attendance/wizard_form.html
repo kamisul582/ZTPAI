@@ -1,0 +1,18 @@
+<!DOCTYPE html> {% extends 'shared_layout/base.html' %} {%block title%} register {%endblock title%} {%block contents%} {%if error%}
+<div class="alert alert-danger" role="alert">
+    {{error}}
+</div>
+{%endif%}
+
+
+  <h2>Registration</h2>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ wizard.management_form }}
+    {{ wizard.form }}
+    <input type="submit" value="Next">
+</form>
+<small class="text-muted">
+    Already have an account ? <a class="ml-2" href="{%url 'attendance:login'%}">Sign In</a>
+</small>
+{% endblock %}

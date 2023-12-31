@@ -1,0 +1,9 @@
+{% extends 'shared_layout/base.html' %}
+
+{% block content %}
+  <h2>Registration Completed</h2>
+  <p>Thank you for registering as a company.</p>
+  <p>Your company details:</p>
+  <p>Name: {{ company.name }}</p>
+  <p>Address: {{ company.address }}</p>
+{% endblock %}

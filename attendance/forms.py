@@ -5,8 +5,9 @@ from django.forms import widgets
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import validate_email
 from django import forms
+from .models import Company, Worker, CustomUser
 
-
+CustomUser = get_user_model()
 
 class CustomLoginForm(forms.Form):
     username_or_email = forms.CharField(max_length=256, widget=forms.TextInput(
@@ -42,39 +43,70 @@ class AddDataForm(forms.Form):
         return self.cleaned_data['lastname']
     def clean_company(self):
         return self.cleaned_data['company']
-
-class CreateCompanyForm(forms.Form):
-    name = forms.CharField(max_length=256, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Name'}))
-    address =forms.CharField(max_length=256, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Address'}))
-    def clean_name(self):
-        return self.cleaned_data['name']
-    def clean_address(self):
-        return self.cleaned_data['address']   
     
-class RegisterForm(UserCreationForm):
-    def __init__(self, *args, **kwargs):
-        super(RegisterForm, self).__init__(*args, **kwargs)
 
-        self.fields['username'].widget = widgets.TextInput(
-            attrs={'placeholder': "username", "class": "form-control"})
-        self.fields['email'].widget = widgets.EmailInput(
-            attrs={'placeholder': "email", "class": "form-control"})
-        self.fields['password1'].widget = widgets.PasswordInput(
-            attrs={'placeholder': "password", "class": "form-control"})
-        self.fields['password2'].widget = widgets.PasswordInput(
-            attrs={'placeholder': "repeat password", "class": "form-control"})
-
+  
+    
+#class RegisterForm(UserCreationForm):
+#    firstname = forms.CharField(max_length=256, widget=forms.TextInput(
+#        attrs={'class': 'form-control', 'placeholder': 'Firstname'}))
+#    lastname = forms.CharField(max_length=256, widget=forms.TextInput(
+#        attrs={'class': 'form-control', 'placeholder': 'Lastname'}))
+#    company_name = forms.CharField(max_length=256, widget=forms.TextInput(
+#        attrs={'class': 'form-control', 'placeholder': 'Company Name'}))
+#    company_address = forms.CharField(max_length=256, widget=forms.TextInput(
+#        attrs={'class': 'form-control', 'placeholder': 'Company Address'}))
+#    
+#    class Meta:
+#        model = CustomUser
+#        fields = ('username', 'email', 'password1', 'password2', 'firstname', 'lastname', 'company_name', 'company_address')
+#
+#    def save(self, commit=True):
+#        user = super(RegisterForm, self).save(commit=False)
+#        user.firstname = self.cleaned_data['firstname']
+#        user.lastname = self.cleaned_data['lastname']
+#
+#        # Check if the user is registering as a company
+#        if 'company_name' in self.cleaned_data and 'company_address' in self.cleaned_data:
+#            company_name = self.cleaned_data['company_name']
+#            company_address = self.cleaned_data['company_address']
+#            company = Company(name=company_name, address=company_address, user=user)
+#            company.save()
+#        else:
+#            user.save()
+#
+#            # If not a company, check if the user is registering as a worker
+#            if 'company' in self.cleaned_data:
+#                company_name = self.cleaned_data['company']
+#                company = Company.objects.get(name=company_name, user=user)
+#                worker = Worker(user=user, company=company, firstname=user.firstname, lastname=user.lastname)
+#                worker.save()
+#
+#        return user
     def clean_email(self):
         email = self.cleaned_data['email']
         if get_user_model().objects.filter(email=email).exists():
             raise ValidationError("This email address is already exists.")
         return email
-
+class RegistrationChoiceForm(forms.Form):
+    registration_choice = forms.ChoiceField(
+        choices=[('company', 'Company Registration'), ('worker', 'Worker Registration')],
+        widget=forms.RadioSelect
+    )
+class CustomUserCreationForm(UserCreationForm):
     class Meta:
-        model = get_user_model()
-        fields = ("username", "email")
+        model = CustomUser
+        fields = UserCreationForm.Meta.fields
+
+class RegisterCompanyForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = ['name', 'address']  # Add company-specific fields here
+
+class RegisterWorkerForm(forms.ModelForm):
+    class Meta:
+        model = Worker
+        fields = ['company','firstname', 'lastname',]  # Add worker-specific fields here  
 
 
 class ForgetPasswordEmailCodeForm(forms.Form):

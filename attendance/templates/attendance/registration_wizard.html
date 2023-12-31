@@ -1,0 +1,24 @@
+<!DOCTYPE html> {% extends 'shared_layout/base.html' %} {%block title%} register {%endblock title%} {%block contents%} {%if error%}
+<div class="alert alert-danger" role="alert">
+    {{error}}
+</div>
+{%endif%}
+
+
+  <h2>Registration Wizard</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    {{ registration_choice_form.as_p }}
+    
+    {{ custom_user_form.as_p }}
+
+    {% if registration_choice_form.cleaned_data.registration_choice == 'company' %}
+      {{ company_form.as_p }}
+    {% elif registration_choice_form.cleaned_data.registration_choice == 'worker' %}
+      {{ worker_form.as_p }}
+    {% endif %}
+
+    <button type="submit">Register</button>
+  </form>
+{% endblock %}

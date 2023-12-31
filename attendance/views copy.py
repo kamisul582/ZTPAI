@@ -140,57 +140,9 @@ def logout_view(request):
 #        form = CreateCompanyForm()
 #    print(request.user)
 #    return render(request, 'attendance/login.html', {'form': form})
-STEP_ONE = u'0'
-STEP_TWO = u'1'
-STEP_THREE = u'2'
-STEP_FOUR = u'3'
-
-class MyWizard(SessionWizardView):
-    # Your form wizard itself; will not be called directly by urls.py, but rather wrapped in a function that provides the condition_dictionary
-
-    # Change 1: Functions need to be stated before the dictionary
-    def return_true(wizard): 
-        return True  # A condition that is always True, for when you always want the form seen
-
-    # Change 2: Only proceed with the logic if the step is valid
-    def check_step_two(wizard): 
-        step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
-        # Do something with info; can retrieve for any prior steps
-        if step_1_info :
-            if step_1_info['registration_choice'] == 'company':
-                print("step_1_info",step_1_info)
-                return True  # Show step 2
-            else:
-                return False  # or don't show
-    def check_step_three(wizard): 
-        step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
-        # Do something with info; can retrieve for any prior steps
-        if step_1_info :
-            if step_1_info['registration_choice'] == 'worker':
-                print("step_1_info",step_1_info)
-                return True  # Show step 2
-            else:
-                return False  # or don't show
-    # Change 3: A condition must be added to skip an additional form
-    condition_dict = {  
-        STEP_ONE: return_true,  # Callable function that says to always show this step
-        STEP_TWO: return_true,  # Conditional callable for verifying whether to show step two
-        STEP_THREE: check_step_two,  # Conditional callable for verifying whether to show step three
-        STEP_FOUR: check_step_three,  # Callable function that says to always show this step
-    }
-    
-    form_list = [  
-        (STEP_ONE, RegistrationChoiceForm),
-        (STEP_TWO, CustomUserCreationForm),
-        (STEP_THREE, RegisterCompanyForm),
-        (STEP_FOUR, RegisterWorkerForm),
-    ]
-
-    
-
-# Your original code
-class RegistrationWizardView(MyWizard):
+class RegistrationWizardView(SessionWizardView):
     template_name = 'attendance/wizard_form.html'
+    form_list = [RegistrationChoiceForm, CustomUserCreationForm, RegisterCompanyForm, RegisterWorkerForm]
 
     def done(self, form_list, **kwargs):
         data = {}
