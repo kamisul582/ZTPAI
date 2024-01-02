@@ -7,9 +7,6 @@ from django.db.models.signals import post_save
 from os import path
 
 
-def get_profile_picture_filepath(instance, filename):
-    filename = filename.split('.')[-1]
-    return path.join('profile_images', '{}profile_image.{}'.format(instance.pk, filename))
 
 
 class CustomUser(AbstractUser):
@@ -59,12 +56,7 @@ class Worker(models.Model):
     def __str__(self):
         return f"{self.id} {self.user} -> {self.firstname} {self.lastname} {self.kiosk_code}  works in {self.company} {self.__class__}"
 
-@receiver(post_save, sender=CustomUser)
-def create_or_update_worker(sender, instance, created, **kwargs):
-    if created and instance.is_worker:
-        Worker.objects.create(user=instance)
-    elif not created and instance.is_worker:
-        instance.worker.save()
+
     
 class Worktime(models.Model):
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)

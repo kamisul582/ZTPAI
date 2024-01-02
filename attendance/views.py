@@ -204,64 +204,43 @@ class RegistrationWizardView(MyWizard):
         )
 
         if data['registration_choice'] == 'company':
-            user.is_company = True
             company = Company.objects.create(
                 user=user,
                 name=data['name'],
                 address=data['address']
             )
-            return render(self.request, 'attendance/register_done_company.html', {'company': company})
+            user.is_company = True
+            user.save()
+            return redirect('attendance:login')
         elif data['registration_choice'] == 'worker':
-            user.is_worker = True
+            
             worker = Worker.objects.create(
                 user=user,
                 company=data['company'],
                 firstname=data['firstname'],
                 lastname=data['lastname'],
-                kiosk_code=generate_kiosk_code()
+                kiosk_code=generate_kiosk_code(company=data['company'])
             )
-            return render(self.request, 'attendance/register_done_worker.html', {'worker': worker})
+            user.is_worker = True
+            user.save()
+            return redirect('attendance:login')
         else:
             return render(self.request, 'attendance/registration_error.html')
-@login_required
-def add_data(request):
-    if request.method == 'POST':
-        form = AddDataForm(request.POST)
-        if form.is_valid():
-            print(form.cleaned_data)
-            firstname = form.cleaned_data['firstname']
-            lastname = form.cleaned_data['lastname']
-            company = Company.objects.get(pk=form.cleaned_data['company'])
-            
-            worker = Worker(user = request.user,company=company,firstname=firstname, lastname=lastname,kiosk_code = generate_kiosk_code())
-            #request.user.firstname = form.cleaned_data['firstname']
-            #request.user.lastname = form.cleaned_data['lastname']
-            #request.user.kiosk_code = generate_kiosk_code()
-            #request.user.save()
-            worker.save()
-            request.user.is_worker = True
-            request.user.save()
-    #request.user.bio = "testing"
-    else:
-        form = AddDataForm()
-    print(request.user)
-    return render(request, 'attendance/login.html', {'form': form})
-def generate_kiosk_code():
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6)) # TODO needs to be made unique
-    return code
 
-#    users = User.objects.filter(employer=_employer)
-#    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-#    codes = []
-#    i=0
-#    while i<20:
-#        for user in users:
-#            codes.append(user.kiosk_code)
-#        
-#        if code in codes:
-#            i+=1
-#        else:
-#            return code
+def generate_kiosk_code(company):
+    workers = Worker.objects.filter(company=company)
+    print("workers",workers)
+    codes = []
+    i=0
+    while i<20:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        for worker in workers:
+            codes.append(worker.kiosk_code)
+        print("codes",codes)
+        if code in codes:
+            i+=1
+        else:
+            return code
 
 #@redirect_authenticated_user
 #def registeration_view(request):

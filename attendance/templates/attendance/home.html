@@ -3,20 +3,22 @@
 
 {%block contents%}
 
-
+{% if user.is_company == 0 and  user.is_worker == 1%}
 <h1>Worktime Entries for {{ user.username }}</h1>
 <h1>Kiosk Code {{ worker.kiosk_code }}</h1>
 <h1>Firstname {{ worker.firstname }}</h1>
 <h1>Lastname {{ worker.lastname }}</h1>
-<!-- Display user information -->
-<h1>Worktime Entries for {{ company.name }}</h1>
+{% endif %}
+{% if user.is_company == 1 and user.is_worker == 0%}
+<h1>Company Profile {{ company.name }}</h1>
 <p><strong>User ID:</strong> {{ user.id }}</p>
 <p><strong>Email:</strong> {{ user.email }}</p>
+{% endif %}
 <!-- Add more user attributes as needed -->
-
+{% if worktime_entries %}
 <h2>Worktime Entries</h2>
 
-{% if worktime_entries %}
+
 <div id="worktime_table_container">
     <table id="worktime_table">
         <thead>
@@ -45,10 +47,11 @@
     var container = document.getElementById('worktime_table_container');
     container.scrollTop = container.scrollHeight;
 </script>
+<button id="updateWorktimeButton">Update Worktime</button>
 {% else %}
     <p>No worktime entries available.</p>
 {% endif %}
-<button id="updateWorktimeButton">Update Worktime</button>
+
 
 <script>
     $(document).ready(function() {
