@@ -31,7 +31,7 @@ class CustomLoginForm(forms.Form):
             return username_or_email
 class KioskCodeForm(forms.Form):
     kiosk_code = forms.CharField(max_length=8, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Kiosk Code'}))
+        attrs={'class': 'form-control', 'placeholder': 'Kiosk Code','id': 'kiosk_code_'}))
 class AddDataForm(forms.Form):
     firstname = forms.CharField(max_length=256, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Firstname'}))

@@ -71,11 +71,12 @@ def home_view(request):
     
 @login_required
 #@csrf_exempt
-def add_worktime(request):
+def add_worktime(request,worker = None):
     print("in add_worktime")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')  # Assuming you pass the user_id in the request
-        worker=Worker.objects.get(user_id=user_id)
+        if worker is None:
+            worker=Worker.objects.get(user_id=user_id)
         
         # Check if there is an existing entry for the user and current date
         existing_entry = Worktime.objects.filter(worker=worker, punch_out__isnull=True).first()
@@ -110,15 +111,25 @@ def update_worktime_by_kiosk_code(request):
     print("update_worktime_by_kiosk_code")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
+        print(request.body)
+        #print(user_id)
         form = KioskCodeForm(request.POST)
+        
         if form.is_valid():
             print(user_id)
             company=Company.objects.get(user_id=user_id)
             kiosk_code = form.cleaned_data['kiosk_code']
-            worker = Worker.objects.get(company=company,kiosk_code=kiosk_code)
-            print(worker)
+            try:
+                worker=Worker.objects.get(kiosk_code=kiosk_code)
+            except ObjectDoesNotExist:
+                return JsonResponse({'status': 'failure','message':"Worker with that Kiosk Code was not found."})
+            add_worktime(request,worker)
+            print(f"{worker.firstname} {worker.lastname}")
+            worker_info = f"{worker.firstname} {worker.lastname}"
+            return JsonResponse({'status': 'success','worker':worker_info,'message':"Successfully updated worktime for: "})
     else:
         form = KioskCodeForm()
+    
     return render(request, 'attendance/home.html', {'form': form})
 
 
