@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <html lang="en">
-    <div id="container">
+    
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -32,9 +32,13 @@
         border: 1px solid #ddd; /* Optional: Add a border for better visibility */
         padding: 8px;
         text-align: left;
+    }
         
-        
-        
+    html, body {
+    margin: 0;
+    height: 100%;
+    min-height: 100%;
+    
     }
     #worktime_table th{
         background-color: #e6e6e6;
@@ -48,14 +52,22 @@
     tr:last-child {
             font-weight: bold;
         }
+    #updateWorktimeButton{
+        text-align: right;
+        margin-top: 10px;
+    }
+    .align-right {
+        text-align: right;
+      }
     #container{
     background: transparent linear-gradient(180deg, #FFE5EC 0%, #9796F0 100%) 0% 0% no-repeat ;
+    text-align: left;
     }
     </style>
     {%endblock customcss%}
 </head>
 
-<body class="bg-light">
+<body id="container">
     {%include 'shared_layout/navbar.html'%}
     <div class="container my-3">
         {% if messages %}
@@ -72,7 +84,7 @@
     
     {%block customjs%}
     {%endblock customjs%}
-</div>
+
 </body>
 
 </html>

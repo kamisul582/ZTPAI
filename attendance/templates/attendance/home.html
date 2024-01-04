@@ -1,32 +1,28 @@
-<div id="container">
+
 {% extends 'shared_layout/base.html' %}
 
 {%block contents%}
 
 {% if user.is_company == 0 and  user.is_worker == 1%}
-<h1>Worktime Entries for {{ user.username }}</h1>
-<h1>Kiosk Code {{ worker.kiosk_code }}</h1>
-<h1>Firstname {{ worker.firstname }}</h1>
-<h1>Lastname {{ worker.lastname }}</h1>
-{% endif %}
-{% if user.is_company == 1 and user.is_worker == 0%}
-<h1>Company Profile {{ company.name }}</h1>
-<p><strong>User ID:</strong> {{ user.id }}</p>
-<p><strong>Email:</strong> {{ user.email }}</p>
-{% endif %}
+<h1>Worktime Entries for: {{ user.username }}</h1>
+<h1>Kiosk Code: {{ worker.kiosk_code }}</h1>
+<h1>Firstname: {{ worker.firstname }}</h1>
+<h1>Lastname: {{ worker.lastname }}</h1>
+
+
 <!-- Add more user attributes as needed -->
 {% if worktime_entries %}
-<h2>Worktime Entries</h2>
+<h2>Worktime Entries:</h2>
 
 
 <div id="worktime_table_container">
     <table id="worktime_table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Punch In</th>
-                <th>Punch Out</th>
-                <th>Total Time</th>
+                <th>Date:</th>
+                <th>Punch In:</th>
+                <th>Punch Out:</th>
+                <th>Total Time:</th>
             </tr>
         </thead>
         <tbody>
@@ -41,17 +37,20 @@
         </tbody>
     </table>
 </div>
-</div>
+
 <script>
     // Scroll to the bottom of the table container
     var container = document.getElementById('worktime_table_container');
     container.scrollTop = container.scrollHeight;
 </script>
-<button id="updateWorktimeButton">Update Worktime</button>
+
 {% else %}
     <p>No worktime entries available.</p>
 {% endif %}
-
+<div class="align-right">
+    <button id="updateWorktimeButton">Update Worktime</button>
+</div>
+{% endif %}
 
 <script>
     $(document).ready(function() {
@@ -85,4 +84,16 @@
         });
     });
     </script>
+
+{% if user.is_company == 1 and user.is_worker == 0%}
+<h1>Company Profile {{ company.name }}</h1>
+<p><strong>User ID:</strong> {{ user.id }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+
+
+<form action="{% url 'attendance:update_worktime_by_kiosk_code'  %}" method="post">
+    {%csrf_token%} {%include 'attendance/form_snippets.html' with form=form%}
+    <input class="btn btn-primary" type="submit" value="Update Worktime">
+</form>
+{% endif %}
 {%endblock contents%}

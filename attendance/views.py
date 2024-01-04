@@ -26,7 +26,7 @@ from .forms import (
     #RegisterForm,
     ForgetPasswordEmailCodeForm,
     ChangePasswordForm,
-    AddDataForm,
+    KioskCodeForm,
     RegisterCompanyForm,
     RegisterWorkerForm,
     RegistrationChoiceForm,
@@ -47,19 +47,28 @@ def home_view(request):
     user=CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
-    try:
-        worker=Worker.objects.get(user_id=user_id)
-    except ObjectDoesNotExist:
-        return render(request, 'attendance/home.html',{'users':user, 'user_id':user_id})
-    print("worker",worker.firstname)
+    if user.is_worker:
+        try:
+            worker=Worker.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return render(request, 'attendance/home.html',{'users':user, 'user_id':user_id})
+        
+        worktime_entries = Worktime.objects.filter(worker=worker)
+        return render(request, 'attendance/home.html',{'users':user, 'user_id': user_id,'worker': worker,'worktime_entries':worktime_entries})
+
+    if user.is_company:
+        company = Company.objects.get(user_id=user_id)
+        form = KioskCodeForm()
+        return render(request, 'attendance/home.html',{'users':user, 'company':company,'user_id': user_id,'form':form})
     #company = Company.objects.all() 
     #print("Company",company)
     
-    worktime_entries = Worktime.objects.filter(worker=worker)
+    
+    #form = KioskCodeForm()
     #print("home view",user,worktime_entries)
     #return render(request, 'attendance/home.html',{'users':user,'company':company,'worktime_entries':worktime_entries, 'user_id': user_id})
     #return render(request, 'attendance/home.html')
-    return render(request, 'attendance/home.html',{'users':user, 'user_id': user_id,'worker': worker,'worktime_entries':worktime_entries})
+    
 @login_required
 #@csrf_exempt
 def add_worktime(request):
@@ -94,8 +103,24 @@ def get_worktime_details(request, entry_id):
         'punch_out': worktime.punch_out,
         'total_time': worktime.total_time,
     }
-    return JsonResponse(data)   
-    
+    return JsonResponse(data)
+
+@login_required   
+def update_worktime_by_kiosk_code(request):
+    print("update_worktime_by_kiosk_code")
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        form = KioskCodeForm(request.POST)
+        if form.is_valid():
+            print(user_id)
+            company=Company.objects.get(user_id=user_id)
+            kiosk_code = form.cleaned_data['kiosk_code']
+            worker = Worker.objects.get(company=company,kiosk_code=kiosk_code)
+            print(worker)
+    else:
+        form = KioskCodeForm()
+    return render(request, 'attendance/home.html', {'form': form})
+
 
 @redirect_authenticated_user
 def login_view(request):
