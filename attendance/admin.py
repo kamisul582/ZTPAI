@@ -19,7 +19,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ('email','username')
+        fields = ('email', 'username')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -67,7 +67,6 @@ class CustomUserAdmin(UserAdmin):
         'email',
         'last_login',
         'date_joined',
-        #source deleted
     )
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
