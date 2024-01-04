@@ -92,11 +92,12 @@
 
 <form id='kiosk_code_form' method="post">
     {%csrf_token%} {%include 'attendance/form_snippets.html' with form=form%}
-    <input class="btn btn-primary" type="submit" value="Update Worktime">
+    <input id='kiosk_code' class="btn btn-primary" type="submit" value="Update Worktime">
+    <div id="alert"></div>
 </form>
 {% endif %}
 
-<div id="alert">tekst</div>
+<div id="alert"></div>
 <script>
     $(document).ready(function() {
         $('#kiosk_code_form').on('submit', function() {
@@ -117,10 +118,12 @@
                     
                     if (data.status === 'success') {
                         // Optional: Display a success message or perform other actions
+                        //$('#kiosk_code_form').hide();
                         $('#kiosk_code_form').val('');
-                        $('#alert').val('success');
+                        $('#alert').html('<div class="alert alert-success">'  + data.message + data.worker + '</div>').show();
                         console.log(data);
-                        $('#alert').html('<div class="alert alert-success">' + response.message + '</div>').show();
+                        console.log(data.message);
+                        //$('#alert').html('<div class="alert alert-success">' + response.message + '</div>').show();
                         //location.reload();
                         // Assuming you have an HTML element with the ID 'worktime_table'
 
@@ -135,5 +138,12 @@
             });
         });
     });
+    </script>
+    <script>
+        var element = document.getElementById('kiosk_code');
+        var positionInfo = element.getBoundingClientRect();
+        var width = positionInfo.width;
+        console.log(width)
+        document.getElementById("alert").style.width = width;
     </script>
 {%endblock contents%}

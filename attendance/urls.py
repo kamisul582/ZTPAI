@@ -17,6 +17,7 @@ app_name = 'attendance'
 urlpatterns = [
     path('', home_view, name='home'),
     path('login/', login_view, name='login'),
+    path('change-password/', reset_new_password_view, name='reset_new_password_view'),
     path('worktime-by-kiosk-code/', update_worktime_by_kiosk_code, name='update_worktime_by_kiosk_code'),
     path('logout/', logout_view, name='logout'),
     path('register/', RegistrationWizardView.as_view(), name='register'),

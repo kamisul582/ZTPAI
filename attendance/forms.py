@@ -32,6 +32,7 @@ class CustomLoginForm(forms.Form):
 class KioskCodeForm(forms.Form):
     kiosk_code = forms.CharField(max_length=8, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Kiosk Code','id': 'kiosk_code_'}))
+    
 class AddDataForm(forms.Form):
     firstname = forms.CharField(max_length=256, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'Firstname'}))
@@ -46,50 +47,12 @@ class AddDataForm(forms.Form):
     def clean_company(self):
         return self.cleaned_data['company']
     
-
-  
-    
-#class RegisterForm(UserCreationForm):
-#    firstname = forms.CharField(max_length=256, widget=forms.TextInput(
-#        attrs={'class': 'form-control', 'placeholder': 'Firstname'}))
-#    lastname = forms.CharField(max_length=256, widget=forms.TextInput(
-#        attrs={'class': 'form-control', 'placeholder': 'Lastname'}))
-#    company_name = forms.CharField(max_length=256, widget=forms.TextInput(
-#        attrs={'class': 'form-control', 'placeholder': 'Company Name'}))
-#    company_address = forms.CharField(max_length=256, widget=forms.TextInput(
-#        attrs={'class': 'form-control', 'placeholder': 'Company Address'}))
-#    
-#    class Meta:
-#        model = CustomUser
-#        fields = ('username', 'email', 'password1', 'password2', 'firstname', 'lastname', 'company_name', 'company_address')
-#
-#    def save(self, commit=True):
-#        user = super(RegisterForm, self).save(commit=False)
-#        user.firstname = self.cleaned_data['firstname']
-#        user.lastname = self.cleaned_data['lastname']
-#
-#        # Check if the user is registering as a company
-#        if 'company_name' in self.cleaned_data and 'company_address' in self.cleaned_data:
-#            company_name = self.cleaned_data['company_name']
-#            company_address = self.cleaned_data['company_address']
-#            company = Company(name=company_name, address=company_address, user=user)
-#            company.save()
-#        else:
-#            user.save()
-#
-#            # If not a company, check if the user is registering as a worker
-#            if 'company' in self.cleaned_data:
-#                company_name = self.cleaned_data['company']
-#                company = Company.objects.get(name=company_name, user=user)
-#                worker = Worker(user=user, company=company, firstname=user.firstname, lastname=user.lastname)
-#                worker.save()
-#
-#        return user
     def clean_email(self):
         email = self.cleaned_data['email']
         if get_user_model().objects.filter(email=email).exists():
             raise ValidationError("This email address is already exists.")
         return email
+    
 class RegistrationChoiceForm(forms.Form):
     registration_choice = forms.ChoiceField(
         choices=[('company', 'Company Registration'), ('worker', 'Worker Registration')],
@@ -115,9 +78,7 @@ class ForgetPasswordEmailCodeForm(forms.Form):
     username_or_email = forms.CharField(max_length=256,
                                         widget=forms.TextInput(
                                             attrs={'class': 'form-control',
-                                                   'placeholder': 'Type your username or email'}
-                                        )
-                                        )
+                                                   'placeholder': 'Type your username or email'}))
 
     def clean_username_or_email(self):
         username_or_email = self.cleaned_data['username_or_email']

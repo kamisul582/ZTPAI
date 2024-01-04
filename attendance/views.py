@@ -1,30 +1,17 @@
 from django.utils import timezone
 import random
 import string
-from django.contrib.auth import (
-    authenticate,
-    get_user_model,
-    login,
-    logout,
-)
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
-from django.utils.crypto import get_random_string
-from django.shortcuts import (
-    redirect,
-    render,
-)
+from django.shortcuts import redirect, render
+
 from django.contrib.auth.decorators import login_required
-from django.views import View
-
 from attendance.admin import CustomUserCreationForm
-
 from .forms import (
     CustomLoginForm,
-    #RegisterForm,
-    ForgetPasswordEmailCodeForm,
     ChangePasswordForm,
     KioskCodeForm,
     RegisterCompanyForm,
@@ -32,16 +19,11 @@ from .forms import (
     RegistrationChoiceForm,
 )
 from .models import CustomUser, Worktime, Company, Worker
-from .utils import (
-    send_activation_code,
-    send_reset_password_code,
-)
 from .decorators import only_authenticated_user, redirect_authenticated_user
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from formtools.wizard.views import SessionWizardView
-from django.urls import reverse
+import ast
 @only_authenticated_user
 def home_view(request):
     user=CustomUser.objects.filter(username=request.user.username)
@@ -60,21 +42,12 @@ def home_view(request):
         company = Company.objects.get(user_id=user_id)
         form = KioskCodeForm()
         return render(request, 'attendance/home.html',{'users':user, 'company':company,'user_id': user_id,'form':form})
-    #company = Company.objects.all() 
-    #print("Company",company)
-    
-    
-    #form = KioskCodeForm()
-    #print("home view",user,worktime_entries)
-    #return render(request, 'attendance/home.html',{'users':user,'company':company,'worktime_entries':worktime_entries, 'user_id': user_id})
-    #return render(request, 'attendance/home.html')
     
 @login_required
-#@csrf_exempt
 def add_worktime(request,worker = None):
     print("in add_worktime")
     if request.method == 'POST':
-        user_id = request.POST.get('user_id')  # Assuming you pass the user_id in the request
+        user_id = request.POST.get('user_id')
         if worker is None:
             worker=Worker.objects.get(user_id=user_id)
         
@@ -97,7 +70,6 @@ def add_worktime(request,worker = None):
         
 def get_worktime_details(request, entry_id):
     worktime = get_object_or_404(Worktime, id=entry_id)
-    # Assuming you have appropriate fields in your Worktime model
     data = {
         'date': worktime.date,
         'punch_in': worktime.punch_in,
@@ -112,7 +84,6 @@ def update_worktime_by_kiosk_code(request):
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         print(request.body)
-        #print(user_id)
         form = KioskCodeForm(request.POST)
         
         if form.is_valid():
@@ -123,15 +94,17 @@ def update_worktime_by_kiosk_code(request):
                 worker=Worker.objects.get(kiosk_code=kiosk_code)
             except ObjectDoesNotExist:
                 return JsonResponse({'status': 'failure','message':"Worker with that Kiosk Code was not found."})
-            add_worktime(request,worker)
+            response = add_worktime(request,worker)
+            response_data = ast.literal_eval(response.content.decode("UTF-8"))
             print(f"{worker.firstname} {worker.lastname}")
             worker_info = f"{worker.firstname} {worker.lastname}"
-            return JsonResponse({'status': 'success','worker':worker_info,'message':"Successfully updated worktime for: "})
+            if 'entry_id' in response_data:
+                print(response_data['entry_id'])
+                return JsonResponse({'status': 'success','message':"Successfully created a new worktime entry for: ",'worker':worker_info})
+            return JsonResponse({'status': 'success','message':"Successfully updated an existing worktime entry for: ",'worker':worker_info})
     else:
         form = KioskCodeForm()
-    
     return render(request, 'attendance/home.html', {'form': form})
-
 
 @redirect_authenticated_user
 def login_view(request):
@@ -151,68 +124,45 @@ def login_view(request):
         form = CustomLoginForm()
     return render(request, 'attendance/login.html', {'form': form, 'error': error})
 
-
 @only_authenticated_user
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('attendance:login')
 
-#@login_required
-#def create_company(request):
-#    if request.method == 'POST':
-#        form = CreateCompanyForm(request.POST)
-#        if form.is_valid():
-#            print(form.cleaned_data)
-#            name = form.cleaned_data['name']
-#            address = form.cleaned_data['address']
-#            company = Company(user = request.user, name = name, address = address)
-#            print(company)
-#            company.save()
-#            request.user.is_company = True
-#            request.user.save()
-#    #request.user.bio = "testing"
-#    else:
-#        form = CreateCompanyForm()
-#    print(request.user)
-#    return render(request, 'attendance/login.html', {'form': form})
 STEP_ONE = u'0'
 STEP_TWO = u'1'
 STEP_THREE = u'2'
 STEP_FOUR = u'3'
 
 class MyWizard(SessionWizardView):
-    # Your form wizard itself; will not be called directly by urls.py, but rather wrapped in a function that provides the condition_dictionary
-
-    # Change 1: Functions need to be stated before the dictionary
+    
     def return_true(wizard): 
-        return True  # A condition that is always True, for when you always want the form seen
+        return True 
 
-    # Change 2: Only proceed with the logic if the step is valid
     def check_step_two(wizard): 
         step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
         # Do something with info; can retrieve for any prior steps
         if step_1_info :
             if step_1_info['registration_choice'] == 'company':
                 print("step_1_info",step_1_info)
-                return True  # Show step 2
+                return True  
             else:
-                return False  # or don't show
+                return False  
     def check_step_three(wizard): 
         step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
-        # Do something with info; can retrieve for any prior steps
         if step_1_info :
             if step_1_info['registration_choice'] == 'worker':
                 print("step_1_info",step_1_info)
-                return True  # Show step 2
+                return True  
             else:
-                return False  # or don't show
-    # Change 3: A condition must be added to skip an additional form
+                return False 
+    
     condition_dict = {  
-        STEP_ONE: return_true,  # Callable function that says to always show this step
-        STEP_TWO: return_true,  # Conditional callable for verifying whether to show step two
-        STEP_THREE: check_step_two,  # Conditional callable for verifying whether to show step three
-        STEP_FOUR: check_step_three,  # Callable function that says to always show this step
+        STEP_ONE: return_true,
+        STEP_TWO: return_true,
+        STEP_THREE: check_step_two,
+        STEP_FOUR: check_step_three,
     }
     
     form_list = [  
@@ -222,9 +172,6 @@ class MyWizard(SessionWizardView):
         (STEP_FOUR, RegisterWorkerForm),
     ]
 
-    
-
-# Your original code
 class RegistrationWizardView(MyWizard):
     template_name = 'attendance/wizard_form.html'
 
@@ -277,26 +224,6 @@ def generate_kiosk_code(company):
             i+=1
         else:
             return code
-
-#@redirect_authenticated_user
-#def registeration_view(request):
-#    if request.method == 'POST':
-#        form = RegisterForm(request.POST or None)
-#        if form.is_valid():
-#            user = form.save(commit=False)
-#            user.is_active = False
-#            user.source = 'Register'
-#            user.save(True)
-#            print("User saved",user)
-#    else:
-#        form = RegisterForm()
-#    return render(request, 'attendance/register.html', {'form': form})
-
-
-
-
-
-
 
 @redirect_authenticated_user
 def reset_new_password_view(request):

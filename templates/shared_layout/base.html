@@ -7,7 +7,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <!--<link rel="stylesheet" type="text/css" href="static/styles/style.css">-->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://code.jquery.com/jquery-migrate-3.3.2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script>
@@ -18,9 +17,9 @@
     {%block customcss%}
     <style>
         #worktime_table_container {
-        max-height: 300px; /* Adjust the maximum height as needed */
+        max-height: 300px;
         overflow-y: auto;
-        border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+        border: 1px solid #ccc; 
     }
     
     #worktime_table {
@@ -29,7 +28,7 @@
     }
     
     #worktime_table th, #worktime_table td {
-        border: 1px solid #ddd; /* Optional: Add a border for better visibility */
+        border: 1px solid #ddd; 
         padding: 8px;
         text-align: left;
     }
@@ -56,6 +55,14 @@
         text-align: right;
         margin-top: 10px;
     }
+    #alert{
+        margin-top: 10px;
+        width: fit-content;
+    }
+    #kiosk_code{
+        margin-top: 10px;
+        width: fit-content;
+    }
     .align-right {
         text-align: right;
       }
@@ -72,9 +79,7 @@
     <div class="container my-3">
         {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{%if message.tags == 'error'%}danger {%else%}{{message.tags}} {%endif%} my-2" role="alert">
-            {{message}}
-        </div>
+        
         {% endfor %}
         {% endif %}
 
