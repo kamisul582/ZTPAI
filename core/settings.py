@@ -29,7 +29,10 @@ SECRET_KEY = 'django-insecure-#z2sqp*^ivt(jsmfa_=jm-cli3(m#z^qc7$c=_5hegw7g4igu%
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+GRAPH_MODELS = {
+    'all_applications': True,
+    'graph_models': True,
+     }
 
 # Application definition
 
@@ -40,7 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'django_extensions',
     'attendance.apps.attendanceConfig'
 ]
 
@@ -141,11 +144,11 @@ AUTHENTICATION_BACKENDS = [
     'attendance.backends.EmailOrUsernameModelBackend'
 ]
 
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-#EMAIL_HOST = env('EMAIL_HOST')
-#EMAIL_PORT = 587
-#EMAIL_USE_TLS = True
-#EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-#EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-#DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
-#SERVER_EMAIL = env('SERVER_EMAIL')
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = env('EMAIL_HOST')
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+# SERVER_EMAIL = env('SERVER_EMAIL')

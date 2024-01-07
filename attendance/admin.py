@@ -4,7 +4,6 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.forms import UsernameField
 from django.utils.translation import gettext_lazy as _
-
 # Register your models here.
 from .models import (
     CustomUser,
@@ -20,6 +19,16 @@ class CustomUserCreationForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ('email', 'username')
+        help_texts = {
+            'username': None,
+            'email': None,
+        }
+        labels = {
+            'username': 'username:',
+            'email': 'email:',
+            'password1': 'password:',
+            'password2': 'password:'
+        }
 
     def clean_password2(self):
         # Check that the two password entries match

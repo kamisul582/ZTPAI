@@ -75,12 +75,20 @@ class RegisterCompanyForm(forms.ModelForm):
     class Meta:
         model = Company
         fields = ['name', 'address']  # Add company-specific fields here
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
+            'address': forms.Textarea(attrs={'class': 'custom-class-for-address', 'rows': 3}),
+        }
 
 
 class RegisterWorkerForm(forms.ModelForm):
     class Meta:
         model = Worker
         fields = ['company', 'firstname', 'lastname',]  # Add worker-specific fields here
+        widgets = {
+            'firstname': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
+            'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
+        }
 
 
 class ForgetPasswordEmailCodeForm(forms.Form):

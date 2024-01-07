@@ -36,7 +36,7 @@ class Company(models.Model):
     address = models.TextField(_('address'), max_length=250, blank=True)
 
     def __str__(self):
-        return f"{self.id} {self.user} -> {self.name} {self.address} {self.__class__}"
+        return f"{self.id} {self.user} {self.name} {self.address}"
 
 
 @receiver(post_save, sender=CustomUser)
@@ -57,7 +57,7 @@ class Worker(models.Model):
     def __str__(self):
         return f"""{self.id} {self.user} -> {self.firstname}
                 {self.lastname} {self.kiosk_code}
-                works in {self.company} {self.__class__}"""
+                works in {self.company} """
 
 
 class Worktime(models.Model):

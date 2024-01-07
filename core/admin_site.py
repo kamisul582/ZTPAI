@@ -2,7 +2,6 @@ from django.contrib.admin import AdminSite
 from attendance.admin import *
 
 
-
 class CustomAdminSite(AdminSite):
     site_header = 'Custom administration'
     site_title = 'Custom site admin'

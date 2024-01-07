@@ -94,10 +94,12 @@ def update_worktime_by_kiosk_code(request):
 
         if form.is_valid():
             print(user_id)
+            company = Company.objects.get(user_id=user_id)
             kiosk_code = form.cleaned_data['kiosk_code']
             try:
-                worker = Worker.objects.get(kiosk_code=kiosk_code)
+                worker = Worker.objects.get(company=company, kiosk_code=kiosk_code)
             except ObjectDoesNotExist:
+                print("user not found")
                 return JsonResponse({'status': 'failure', 'message': "Worker with that Kiosk Code was not found."})
             response = add_worktime(request, worker)
             response_data = ast.literal_eval(response.content.decode("UTF-8"))

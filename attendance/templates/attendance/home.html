@@ -4,10 +4,11 @@
 {%block contents%}
 
 {% if user.is_company == 0 and  user.is_worker == 1%}
-<h1>Worktime Entries for: {{ user.username }}</h1>
-<h1>Kiosk Code: {{ worker.kiosk_code }}</h1>
-<h1>Firstname: {{ worker.firstname }}</h1>
-<h1>Lastname: {{ worker.lastname }}</h1>
+<h2>Username: {{ user.username }}</h2>
+<h2>Employed by: {{ worker.company.name }}</h2>
+<h2>Kiosk Code: {{ worker.kiosk_code }}</h2>
+<h2>Firstname: {{ worker.firstname }}</h2>
+<h2>Lastname: {{ worker.lastname }}</h2>
 
 
 <!-- Add more user attributes as needed -->
@@ -85,7 +86,7 @@
     </script>
 
 {% if user.is_company == 1 and user.is_worker == 0%}
-<h1>Company Profile {{ company.name }}</h1>
+<h2>Company Profile {{ company.name }}</h2>
 <p><strong>User ID:</strong> {{ user.id }}</p>
 <p><strong>Email:</strong> {{ user.email }}</p>
 
@@ -120,6 +121,8 @@
                         // Optional: Display a success message or perform other actions
                         //$('#kiosk_code_form').hide();
                         $('#kiosk_code_form').val('');
+                        $('#kiosk_code_form')[0].reset();
+                        document.getElementById("kiosk_code_form").reset();
                         $('#alert').html('<div class="alert alert-success">'  + data.message + data.worker + '</div>').show();
                         console.log(data);
                         console.log(data.message);
@@ -129,6 +132,7 @@
 
                         // Update the table with the new entry
                     } else {
+                        $('#alert').html('<div class="alert alert-warning">'  + data.message +  '</div>').show();
                         // Handle errors if needed
                     }
                 },
@@ -138,12 +142,5 @@
             });
         });
     });
-    </script>
-    <script>
-        var element = document.getElementById('kiosk_code');
-        var positionInfo = element.getBoundingClientRect();
-        var width = positionInfo.width;
-        console.log(width)
-        document.getElementById("alert").style.width = width;
     </script>
 {%endblock contents%}

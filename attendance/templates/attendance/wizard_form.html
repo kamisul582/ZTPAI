@@ -3,15 +3,21 @@
     {{error}}
 </div>
 {%endif%}
-
-
+<form method="post">
+    {%csrf_token%}{{ wizard.management_form }} {%include 'attendance/form_snippets.html' with form=form%}
+    <input class="btn btn-primary" type="submit" value="Register">
+</form>
+<!--
+<div id="register-form">
   <h2>Registration</h2>
   <form method="post" novalidate>
     {% csrf_token %}
     {{ wizard.management_form }}
     {{ wizard.form }}
     <input type="submit" value="Next">
+
 </form>
+</div>-->
 <small class="text-muted">
     Already have an account ? <a class="ml-2" href="{%url 'attendance:login'%}">Sign In</a>
 </small>
