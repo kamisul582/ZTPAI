@@ -1,16 +1,14 @@
-# Attendance - simple wokrtime tracking web app 
+# Attendance - simple worktime tracking web app 
 
-An example of Django project with basic user functionality.
+Create a company, create a worker employed by the company.
+Create worktime entries either from the worker profile or by entering the kiosk code in the company profile.
 
 ## Screenshots
 
 | Log In | User type choice | Registration |
-| -------|--------------|-----------------|
 | <img src="./screenshots/login.png" width="200"> | <img src="./screenshots/register1.png" width="200"> | <img src="./screenshots/register2.png" width="200"> |
 | Worker Registration | Worker View | Company View |
-| -------|--------------|-----------------|
 | <img src="./screenshots/register3.png" width="200"> | <img src="./screenshots/worker_view.png" width="200"> | <img src="./screenshots/company_view.png" width="200"> |
-| Password reset | verifying page | Password change |
 
 ## Functionality
 
