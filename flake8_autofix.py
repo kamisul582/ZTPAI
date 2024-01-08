@@ -262,6 +262,5 @@ def fix_a_file(file):
 
 
 files = get_all_files()
-print(files)
 p = multiprocessing.Pool(multiprocessing.cpu_count())
 p.map(fix_a_file, files)

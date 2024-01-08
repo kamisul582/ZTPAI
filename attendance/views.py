@@ -24,6 +24,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from formtools.wizard.views import SessionWizardView
 import ast
+from rest_framework.decorators import api_view
 
 
 @only_authenticated_user
@@ -48,6 +49,7 @@ def home_view(request):
 
 
 @login_required
+@api_view(['POST'])
 def add_worktime(request, worker=None):
     print("in add_worktime")
     if request.method == 'POST':
@@ -73,6 +75,7 @@ def add_worktime(request, worker=None):
         return JsonResponse({'status': 'success'})
 
 
+@api_view(['GET'])
 def get_worktime_details(request, entry_id):
     worktime = get_object_or_404(Worktime, id=entry_id)
     data = {
@@ -85,6 +88,7 @@ def get_worktime_details(request, entry_id):
 
 
 @login_required
+@api_view(['POST'])
 def update_worktime_by_kiosk_code(request):
     print("update_worktime_by_kiosk_code")
     if request.method == 'POST':
@@ -117,6 +121,7 @@ def update_worktime_by_kiosk_code(request):
 
 
 @redirect_authenticated_user
+@api_view(['POST'])
 def login_view(request):
     error = None
     if request.method == 'POST':
@@ -243,6 +248,7 @@ def generate_kiosk_code(company):
 
 
 @redirect_authenticated_user
+@api_view(['POST'])
 def reset_new_password_view(request):
     if request.method == 'POST':
         form = ChangePasswordForm(request.POST)
