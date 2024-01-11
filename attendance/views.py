@@ -1,3 +1,4 @@
+import json
 from django.utils import timezone
 import random
 import string
@@ -23,8 +24,8 @@ from .decorators import only_authenticated_user, redirect_authenticated_user
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from formtools.wizard.views import SessionWizardView
-import ast
 from rest_framework.decorators import api_view
+from django.core.serializers import serialize
 
 
 @only_authenticated_user
@@ -47,11 +48,40 @@ def home_view(request):
         form = KioskCodeForm()
         return render(request, 'attendance/home.html', {'users': user, 'company': company, 'user_id': user_id, 'form': form})
 
+@only_authenticated_user
+def get_worker_worktime(request, user_id):
+    print("Getting employee worktime")
+    company_user_id = request.user.id
+    company_user = get_object_or_404(CustomUser, id=company_user_id)
+    try:
+        worker = Worker.objects.get(user_id=user_id)
+    except ObjectDoesNotExist:
+        return render(request, 'attendance/employee_worktime.html', {'users': company_user, 'user_id': user_id})
+    worktime_entries = Worktime.objects.filter(worker=worker)
+    return render(request, 'attendance/employee_worktime.html', {'user': company_user, 'worker': worker, 'worktime_entries': worktime_entries})
+
+
+@only_authenticated_user
+# @api_view(['GET'])
+def get_employees(request):
+    print("Getting employees")
+    user = CustomUser.objects.filter(username=request.user.username)
+    user_id = request.user.id
+    user = get_object_or_404(CustomUser, id=user_id)
+    if user.is_company:
+        company = Company.objects.get(user_id=user_id)
+        workers = Worker.objects.filter(company=company)
+        workers = serialize("json", workers)
+        workers = json.loads(workers)
+        return render(request, 'attendance/employees.html', {'workers': workers, 'company': company})
+        # return JsonResponse(workers, safe=False, status=200)
+    else:
+        print("user is not company", user.is_company)
 
 @login_required
 @api_view(['POST'])
 def add_worktime(request, worker=None):
-    print("in add_worktime")
+    print("Adding worktime")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         if worker is None:
@@ -62,14 +92,12 @@ def add_worktime(request, worker=None):
 
         if existing_entry:
             # Update the existing entry with punch_out time
-            print("existing entry", existing_entry)
             existing_entry.punch_out = timezone.now()
             existing_entry.total_time = existing_entry.punch_out - existing_entry.punch_in
             existing_entry.save()
         else:
             # Create a new entry with punch_in time
             new_entry = Worktime(worker=worker, punch_in=timezone.now(), date=timezone.now().date())
-            print("new entry", new_entry)
             new_entry.save()
             return JsonResponse({'status': 'success', 'entry_id': new_entry.id})
         return JsonResponse({'status': 'success'})
@@ -88,16 +116,14 @@ def get_worktime_details(request, entry_id):
 
 
 @login_required
-@api_view(['POST'])
+# @api_view(['POST'])
 def update_worktime_by_kiosk_code(request):
-    print("update_worktime_by_kiosk_code")
+    print("Updating worktime by kiosk code")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
-        print(request.body)
         form = KioskCodeForm(request.POST)
 
         if form.is_valid():
-            print(user_id)
             company = Company.objects.get(user_id=user_id)
             kiosk_code = form.cleaned_data['kiosk_code']
             try:
@@ -106,11 +132,9 @@ def update_worktime_by_kiosk_code(request):
                 print("user not found")
                 return JsonResponse({'status': 'failure', 'message': "Worker with that Kiosk Code was not found."})
             response = add_worktime(request, worker)
-            response_data = ast.literal_eval(response.content.decode("UTF-8"))
-            print(f"{worker.firstname} {worker.lastname}")
+            response_data = response.content.decode("UTF-8")
             worker_info = f"{worker.firstname} {worker.lastname}"
             if 'entry_id' in response_data:
-                print(response_data['entry_id'])
                 return JsonResponse({'status': 'success', 'message':
                                      "Successfully created a new worktime entry for: ", 'worker': worker_info})
             return JsonResponse({'status': 'success', 'message':
@@ -121,7 +145,7 @@ def update_worktime_by_kiosk_code(request):
 
 
 @redirect_authenticated_user
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 def login_view(request):
     error = None
     if request.method == 'POST':
@@ -130,7 +154,6 @@ def login_view(request):
             user = authenticate(
                 request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
             if user:
-                print(user)
                 login(request, user)
                 return redirect('attendance:home')
             else:

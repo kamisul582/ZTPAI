@@ -1,0 +1,40 @@
+
+{% extends 'shared_layout/base.html' %}
+
+{%block contents%}
+
+
+
+
+
+{% if user.is_company == 1 and user.is_worker == 0%}
+<h2>{{ company.name }} Company Profile </h2>
+<p><strong>User ID:</strong> {{ user.id }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<div id="employees_table_container">
+    <table id="employees_table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Kiosk Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for worker in workers %}
+                <tr>
+                    <td><a href="{% url 'attendance:get_worker_worktime'  worker.fields.user  %}">{{ worker.fields.user }}</a></td>
+                    <td>{{ worker.fields.firstname }}</td>
+                    <td>{{ worker.fields.lastname }}</td>
+                    <td>{{ worker.fields.kiosk_code }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endif %}
+
+
+{%endblock contents%}

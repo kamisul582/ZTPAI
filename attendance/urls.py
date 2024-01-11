@@ -13,6 +13,8 @@ from .views import (
     add_worktime,
     get_worktime_details,
     update_worktime_by_kiosk_code,
+    get_employees,
+    get_worker_worktime
 )
 # router = DefaultRouter()
 # router.register('data', RegistrationWizardView, basename='data')
@@ -35,6 +37,8 @@ urlpatterns = [
     path('new-password/', reset_new_password_view, name='reset_new_password'),
     path('add-worktime/', add_worktime, name='add_worktime'),
     path('get-worktime-details/<int:entry_id>/', get_worktime_details, name='get_worktime_details'),
+    path('get-worker-worktime/<int:user_id>/', get_worker_worktime, name='get_worker_worktime'),
+    path('get-employees/', get_employees, name='get_employees'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 

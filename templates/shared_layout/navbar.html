@@ -9,9 +9,19 @@
         <li class="nav-item">
             <a class="nav-link" href="{%url 'attendance:home'%}">Home</a>
         </li>
+        
+        {%endif%}
+        {%if user.is_company and user.is_authenticated%}
+        <li class="nav-item">
+            <a class="nav-link" href="{%url 'attendance:get_employees'%}">Employees</a>
+        </li>
+        
+        {%endif%}
+        {%if user.is_authenticated%}
         <li class="nav-item">
           <a class="nav-link" href="{%url 'attendance:logout'%}">Logout</a>
         </li>
+        
         {%else%}
         <li class="nav-item">
             <a class="nav-link" href="{%url 'attendance:login'%}">Login</a>

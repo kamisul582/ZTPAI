@@ -16,19 +16,24 @@
     <title>{%block title%}{%endblock title%}</title>
     {%block customcss%}
     <style>
-        #worktime_table_container {
-        max-height: 300px;
+        #worktime_table_container, #employees_table_container  {
         overflow-y: auto;
         border: 1px solid #ccc; 
     }
-    
-    #worktime_table {
+    #worktime_table_container{
+        max-height: 300px;
+    }
+    #employees_table_container  {
+        max-height: 400px;
+    }
+
+    #worktime_table, #employees_table {
         width: 100%;
         border-collapse: collapse;
     }
     
     
-    #worktime_table th, #worktime_table td {
+    #worktime_table th, #employees_table th, #worktime_table th, #employees_table td {
         border: 1px solid #ddd; 
         padding: 8px;
         text-align: left;
@@ -40,7 +45,7 @@
     min-height: 100%;
     overflow: hidden;
     }
-    #worktime_table th{
+    #worktime_table th, #employees_table th{
         background-color: #e6e6e6;
     }
     tr:nth-child(even) {

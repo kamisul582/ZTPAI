@@ -1,0 +1,54 @@
+
+{% extends 'shared_layout/base.html' %}
+
+{%block contents%}
+{% if worktime_entries %}
+{% if user.is_company == 1 and  user.is_worker == 0%}
+<h2>Username: {{ worker.user.username }}</h2>
+<h2>Employed by: {{ worker.company.name }}</h2>
+<h2>Kiosk Code: {{ worker.kiosk_code }}</h2>
+<h2>Firstname: {{ worker.firstname }}</h2>
+<h2>Lastname: {{ worker.lastname }}</h2>
+
+
+<!-- Add more user attributes as needed -->
+
+<h2>Worktime Entries:</h2>
+
+
+<div id="worktime_table_container">
+    <table id="worktime_table">
+        <thead>
+            <tr>
+                <th>Date:</th>
+                <th>Punch In:</th>
+                <th>Punch Out:</th>
+                <th>Total Time:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in worktime_entries %}
+                <tr>
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.punch_in }}</td>
+                    <td>{{ entry.punch_out }}</td>
+                    <td>{{ entry.total_time}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Scroll to the bottom of the table container
+    var container = document.getElementById('worktime_table_container');
+    container.scrollTop = container.scrollHeight;
+</script>
+{% endif %}
+{% else %}
+    <p>No worktime entries available.</p>
+{% endif %}
+
+
+
+{%endblock contents%}
