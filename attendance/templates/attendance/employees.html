@@ -14,22 +14,23 @@
 <div id="employees_table_container">
     <table id="employees_table">
         <form method="get" action="{% url 'attendance:get_employees' %}">
-            {% for field in filter_fields %}
-            <th><input type="text" name="{{ field }}" placeholder="Filter by {{ field.capitalize }}"></th>
+            {% for field, filter_value in filter_values %}
+            <th><input type="text" name="{{ field }}" placeholder="Filter by {{ field.capitalize }}" value="{{ filter_value }}"></th>
             {% endfor %}
             <button type="submit">Apply Filter</button>
+            <button type="submit" name="clear_filters">Clear Filters</button>
         </form>
         <thead>
             <tr>
-                <th><a href="?sort=user_id">User ID</a></th>
-                <th><a href="?sort=firstname">First Name</a></th>
-                <th><a href="?sort=lastname">Last Name</a></th>
-                <th><a href="?sort=kiosk_code">Kiosk Code</a></th>
-               <!-- <th>User ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Kiosk Code</th>-->
-            </tr>
+                {% for field, filter_value in filter_values %}
+                <th>
+                    {{field}}
+                    {{filter_value}}
+                    <a href="?sort={{ field }}{% for f, v in filter_values %}&{{ f }}={{ v }}{% endfor %}">
+                        {{ field.capitalize }}
+                      </a>
+                </th>
+                {% endfor %}
         </thead>
         <tbody>
             {% for worker in workers %}

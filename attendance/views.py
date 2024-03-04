@@ -66,6 +66,7 @@ def get_worker_worktime(request, user_id):
 # @api_view(['GET'])
 def get_employees(request,sort='user_id', filter=''):
     print("Getting employees")
+    
     user = CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
@@ -76,11 +77,15 @@ def get_employees(request,sort='user_id', filter=''):
     sort_param = request.GET.get('sort', 'user_id')
     filter_fields = ['user','firstname', 'lastname', 'kiosk_code']
     filter_q = Q()
+    filter_values = {}
     for field in filter_fields:
         filter_value = request.GET.get(field, '')
+        lookup = 'exact' if field == 'user' else 'icontains'
         if filter_value:
-            filter_q &= Q(**{f'{field}__icontains': filter_value})
-    
+            filter_q &= Q(**{f'{field}__{lookup}': filter_value})
+        filter_values[field] = filter_value
+        filter_values[field] = filter_value
+    print(filter_values)
     fixed_filter_condition = Q(company=company) 
     combined_filter = fixed_filter_condition & filter_q
     print(combined_filter)
@@ -88,16 +93,17 @@ def get_employees(request,sort='user_id', filter=''):
     workers = Worker.objects.filter(combined_filter).order_by(sort_param)
     workers = serialize("json", workers)
     workers = json.loads(workers)
+    if 'clear_filters' in request.GET:
+        return redirect('attendance:get_employees')
     context = {
         'workers': workers,
         'current_sort': sort_param,
-        'filter_values': {field: request.GET.get(field, '') for field in filter_fields},
+        'filter_values': filter_values.items(),
         'filter_fields': filter_fields,
         'company': company
     }
     return render(request, 'attendance/employees.html', context)
         # return JsonResponse(workers, safe=False, status=200)
-
 
 @login_required
 @api_view(['POST'])
