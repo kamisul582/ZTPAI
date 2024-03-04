@@ -13,12 +13,22 @@
 <p><strong>Email:</strong> {{ user.email }}</p>
 <div id="employees_table_container">
     <table id="employees_table">
+        <form method="get" action="{% url 'attendance:get_employees' %}">
+            {% for field in filter_fields %}
+            <th><input type="text" name="{{ field }}" placeholder="Filter by {{ field.capitalize }}"></th>
+            {% endfor %}
+            <button type="submit">Apply Filter</button>
+        </form>
         <thead>
             <tr>
-                <th>User ID</th>
+                <th><a href="?sort=user_id">User ID</a></th>
+                <th><a href="?sort=firstname">First Name</a></th>
+                <th><a href="?sort=lastname">Last Name</a></th>
+                <th><a href="?sort=kiosk_code">Kiosk Code</a></th>
+               <!-- <th>User ID</th>
                 <th>First Name</th>
                 <th>Last Name</th>
-                <th>Kiosk Code</th>
+                <th>Kiosk Code</th>-->
             </tr>
         </thead>
         <tbody>

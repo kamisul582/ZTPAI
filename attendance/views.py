@@ -26,6 +26,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from formtools.wizard.views import SessionWizardView
 from rest_framework.decorators import api_view
 from django.core.serializers import serialize
+from django.db.models import Q
 
 
 @only_authenticated_user
@@ -63,20 +64,40 @@ def get_worker_worktime(request, user_id):
 
 @only_authenticated_user
 # @api_view(['GET'])
-def get_employees(request):
+def get_employees(request,sort='user_id', filter=''):
     print("Getting employees")
     user = CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
-    if user.is_company:
-        company = Company.objects.get(user_id=user_id)
-        workers = Worker.objects.filter(company=company)
-        workers = serialize("json", workers)
-        workers = json.loads(workers)
-        return render(request, 'attendance/employees.html', {'workers': workers, 'company': company})
-        # return JsonResponse(workers, safe=False, status=200)
-    else:
+    if not user.is_company:
         print("user is not company", user.is_company)
+        return
+    company = Company.objects.get(user_id=user_id)
+    sort_param = request.GET.get('sort', 'user_id')
+    filter_fields = ['user','firstname', 'lastname', 'kiosk_code']
+    filter_q = Q()
+    for field in filter_fields:
+        filter_value = request.GET.get(field, '')
+        if filter_value:
+            filter_q &= Q(**{f'{field}__icontains': filter_value})
+    
+    fixed_filter_condition = Q(company=company) 
+    combined_filter = fixed_filter_condition & filter_q
+    print(combined_filter)
+    print(request.GET)
+    workers = Worker.objects.filter(combined_filter).order_by(sort_param)
+    workers = serialize("json", workers)
+    workers = json.loads(workers)
+    context = {
+        'workers': workers,
+        'current_sort': sort_param,
+        'filter_values': {field: request.GET.get(field, '') for field in filter_fields},
+        'filter_fields': filter_fields,
+        'company': company
+    }
+    return render(request, 'attendance/employees.html', context)
+        # return JsonResponse(workers, safe=False, status=200)
+
 
 @login_required
 @api_view(['POST'])

@@ -39,6 +39,7 @@ urlpatterns = [
     path('get-worktime-details/<int:entry_id>/', get_worktime_details, name='get_worktime_details'),
     path('get-worker-worktime/<int:user_id>/', get_worker_worktime, name='get_worker_worktime'),
     path('get-employees/', get_employees, name='get_employees'),
+    path('get-employees/<str:sort>/<str:filter>/', get_employees, name='get_employees'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 
