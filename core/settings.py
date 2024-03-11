@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'attendance.apps.attendanceConfig',
     'rest_framework_swagger',
     'rest_framework',
-    'drf_yasg'
+    'drf_yasg',
+    'chartjs'
 ]
 
 MIDDLEWARE = [

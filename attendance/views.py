@@ -27,6 +27,7 @@ from formtools.wizard.views import SessionWizardView
 from rest_framework.decorators import api_view
 from django.core.serializers import serialize
 from django.db.models import Q
+from datetime import timedelta
 
 
 @only_authenticated_user
@@ -49,6 +50,7 @@ def home_view(request):
         form = KioskCodeForm()
         return render(request, 'attendance/home.html', {'users': user, 'company': company, 'user_id': user_id, 'form': form})
 
+
 @only_authenticated_user
 def get_worker_worktime(request, user_id):
     print("Getting employee worktime")
@@ -62,39 +64,48 @@ def get_worker_worktime(request, user_id):
     return render(request, 'attendance/employee_worktime.html', {'user': company_user, 'worker': worker, 'worktime_entries': worktime_entries})
 
 
-@only_authenticated_user
-# @api_view(['GET'])
-def get_employees(request,sort='user_id', filter=''):
-    print("Getting employees")
-    
-    user = CustomUser.objects.filter(username=request.user.username)
-    user_id = request.user.id
+def get_company_from_user(user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     if not user.is_company:
         print("user is not company", user.is_company)
-        return
-    company = Company.objects.get(user_id=user_id)
-    sort_param = request.GET.get('sort', 'user_id')
-    filter_fields = ['user','firstname', 'lastname', 'kiosk_code']
+        return None
+    return Company.objects.get(user_id=user_id)
+
+
+def build_filter_q(request, filter_fields):
     filter_q = Q()
     filter_values = {}
+
     for field in filter_fields:
         filter_value = request.GET.get(field, '')
         lookup = 'exact' if field == 'user' else 'icontains'
+
         if filter_value:
             filter_q &= Q(**{f'{field}__{lookup}': filter_value})
         filter_values[field] = filter_value
-        filter_values[field] = filter_value
-    print(filter_values)
-    fixed_filter_condition = Q(company=company) 
-    combined_filter = fixed_filter_condition & filter_q
-    print(combined_filter)
-    print(request.GET)
-    workers = Worker.objects.filter(combined_filter).order_by(sort_param)
-    workers = serialize("json", workers)
-    workers = json.loads(workers)
+
+    return filter_q, filter_values
+
+
+@only_authenticated_user
+# @api_view(['GET'])
+def get_employees(request, sort='user_id', filter=''):
+    company = get_company_from_user(request.user.id)
+
+    if not company:
+        return JsonResponse({'error': 'User is not associated with a company'})
+
+    sort_param = request.GET.get('sort', 'user_id')
+    filter_fields = ['user', 'firstname', 'lastname', 'kiosk_code']
+
+    filter_q, filter_values = build_filter_q(request, filter_fields)
+
+    combined_filter = Q(company=company) & filter_q
+    workers = json.loads(serialize("json", Worker.objects.filter(combined_filter).order_by(sort_param)))
+
     if 'clear_filters' in request.GET:
         return redirect('attendance:get_employees')
+
     context = {
         'workers': workers,
         'current_sort': sort_param,
@@ -102,8 +113,9 @@ def get_employees(request,sort='user_id', filter=''):
         'filter_fields': filter_fields,
         'company': company
     }
+
     return render(request, 'attendance/employees.html', context)
-        # return JsonResponse(workers, safe=False, status=200)
+
 
 @login_required
 @api_view(['POST'])
@@ -113,25 +125,21 @@ def add_worktime(request, worker=None):
         user_id = request.POST.get('user_id')
         if worker is None:
             worker = Worker.objects.get(user_id=user_id)
-
-        # Check if there is an existing entry for the user and current date
         existing_entry = Worktime.objects.filter(worker=worker, punch_out__isnull=True).first()
 
         if existing_entry:
-            # Update the existing entry with punch_out time
             existing_entry.punch_out = timezone.now()
             existing_entry.total_time = existing_entry.punch_out - existing_entry.punch_in
+            existing_entry.total_time = timedelta(seconds=round(existing_entry.total_time.total_seconds()))
             existing_entry.save()
-        else:
-            # Create a new entry with punch_in time
-            new_entry = Worktime(worker=worker, punch_in=timezone.now(), date=timezone.now().date())
-            new_entry.save()
-            return JsonResponse({'status': 'success', 'entry_id': new_entry.id})
-        return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'success'})
+        new_entry = Worktime(worker=worker, punch_in=timezone.now(), date=timezone.now().date())
+        new_entry.save()
+        return JsonResponse({'status': 'success', 'entry_id': new_entry.id})
 
 
 @api_view(['GET'])
-def get_worktime_details(request, entry_id):
+def get_worktime_details(entry_id):
     worktime = get_object_or_404(Worktime, id=entry_id)
     data = {
         'date': worktime.date,
@@ -175,18 +183,19 @@ def update_worktime_by_kiosk_code(request):
 @api_view(['POST', 'GET'])
 def login_view(request):
     error = None
-    if request.method == 'POST':
-        form = CustomLoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(
-                request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
-            if user:
-                login(request, user)
-                return redirect('attendance:home')
-            else:
-                error = 'Invalid Credentials'
-    else:
+    if request.method != 'POST':
         form = CustomLoginForm()
+        return render(request, 'attendance/login.html', {'form': form, 'error': error})
+    form = CustomLoginForm(request.POST)
+    if not form.is_valid():
+        error = 'Invalid Credentials'
+        return render(request, 'attendance/login.html', {'form': form, 'error': error})
+    user = authenticate(
+        request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
+    if user:
+        login(request, user)
+        return redirect('attendance:home')
+    error = 'Authentication error'
     return render(request, 'attendance/login.html', {'form': form, 'error': error})
 
 
@@ -314,3 +323,26 @@ def reset_new_password_view(request):
     else:
         form = ChangePasswordForm()
     return render(request, 'attendance/new_password.html', {'form': form})
+from django.views.generic import TemplateView
+from chartjs.views.lines import BaseLineChartView
+
+
+class LineChartJSONView(BaseLineChartView):
+    def get_labels(self):
+        """Return 7 labels for the x-axis."""
+        return ["January", "February", "March", "April", "May", "June", "July"]
+
+    def get_providers(self):
+        """Return names of datasets."""
+        return ["Central", "Eastside", "Westside"]
+
+    def get_data(self):
+        """Return 3 datasets to plot."""
+
+        return [[75, 44, 92, 11, 44, 95, 35],
+                [41, 92, 18, 3, 73, 87, 92],
+                [87, 21, 94, 3, 90, 13, 65]]
+
+
+line_chart = TemplateView.as_view(template_name='charts.html')
+line_chart_json = LineChartJSONView.as_view()

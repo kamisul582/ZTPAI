@@ -1,0 +1,32 @@
+
+{% extends 'shared_layout/base.html' %}
+
+{%block contents%}
+
+
+
+
+{% load static %}
+{% if user.is_company == 1 and user.is_worker == 0%}
+<h2>{{ company.name }} Company Profile </h2>
+<p><strong>User ID:</strong> {{ user.id }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<h1>Some Line Charts loaded in Ajax!</h1>
+
+        <canvas id="myChart" width="200" height="50"></canvas>
+
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+        <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+        <script type="text/javascript">
+            $.get('{% url "attendance:line_chart_json" %}', function(data) {
+                var ctx = $("#myChart").get(0).getContext("2d");
+                new Chart(ctx, {
+                    type: 'line', data: data
+                });
+            });
+        </script>
+
+{% endif %}
+
+
+{%endblock contents%}
