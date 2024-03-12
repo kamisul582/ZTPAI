@@ -25,6 +25,15 @@
                 });
             });
         </script>
+        <canvas id="myOtherChart" width="200" height="50"></canvas>
+        <script type="text/javascript">
+            $.get('{% url "attendance:line_chart_json" %}', function(data) {
+                var ctx = $("#myOtherChart").get(0).getContext("2d");
+                new Chart(ctx, {
+                    type: 'line', data: data
+                });
+            });
+        </script>
 
 {% endif %}
 

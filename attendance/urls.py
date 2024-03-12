@@ -16,7 +16,7 @@ from .views import (
     get_employees,
     get_worker_worktime,
 )
-from .charts import line_chart, line_chart_json
+from .charts import template, line_chart_json
 # router = DefaultRouter()
 # router.register('data', RegistrationWizardView, basename='data')
 # urlpatterns = router.urls
@@ -42,7 +42,7 @@ urlpatterns = [
     path('get-employees/', get_employees, name='get_employees'),
     path('get-employees/<str:sort>/<str:filter>/', get_employees, name='get_employees'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('charts', line_chart, name='line_chart'),
+    path('charts', template, name='charts'),
     path('chartJSON', line_chart_json, name='line_chart_json'),
 ]
 
