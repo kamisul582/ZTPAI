@@ -4,11 +4,12 @@ from .models import CustomUser, Worktime, Company, Worker
 
 class LineChartJSONView(BaseLineChartView):
     extra_data = None  # Define a class variable to store extra data
-    user_id = None
+    #user_id = None
     def get_labels(self):
         """Return labels for the x-axis based on your model data and extra data."""
         # Replace this with your actual logic to get date labels from your model
-        worker = Worker.objects.get(user_id=self.user_id)
+        user_id = self.request.GET.get('user_id')
+        worker = Worker.objects.get(user_id=user_id)
         labels_from_model = [str(entry.date) for entry in Worktime.objects.filter(worker_id=worker)]
 
         if self.extra_data:
@@ -19,12 +20,23 @@ class LineChartJSONView(BaseLineChartView):
 
     def get_providers(self):
         """Return names of datasets."""
-        return ["Central", "Eastside", "Westside"]
+        return ["Employee worktime"]
+    
+    def get_colors(self):
+        """
+        Return colors for the datasets.
 
+        Override this method to provide custom colors.
+        """
+        colors = [(255, 87, 51)]  # Example color as RGB tuple
+        return iter(colors)
+
+    
     def get_data(self):
         """Return datasets to plot based on your model data and extra data."""
-        worker = Worker.objects.get(user_id=self.user_id)
-        total_time = [entry.total_time.total_seconds()/60 for entry in Worktime.objects.filter(worker_id=worker)]
+        user_id = self.request.GET.get('user_id')
+        worker = Worker.objects.get(user_id=user_id)
+        total_time = [entry.total_time.total_seconds()/3600 for entry in Worktime.objects.filter(worker_id=worker)]
         punch_in = [entry.punch_in for entry in Worktime.objects.filter(worker_id=worker)]
         punch_out = [entry.punch_out for entry in Worktime.objects.filter(worker_id=worker)]
         name_data = [entry.name for entry in Company.objects.all()]
@@ -37,4 +49,4 @@ class LineChartJSONView(BaseLineChartView):
         return [total_time]
 
 template = TemplateView.as_view(template_name='attendance/charts.html')
-line_chart_json = LineChartJSONView.as_view(user_id = 2)
+line_chart_json = LineChartJSONView.as_view()

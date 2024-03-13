@@ -116,6 +116,10 @@ def get_employees(request, sort='user_id', filter=''):
 
     return render(request, 'attendance/employees.html', context)
 
+def get_user_ids(request):
+    workers = Worker.objects.all().values('user_id', 'firstname','lastname')
+    print(workers)
+    return JsonResponse({'workers': list(workers)})
 
 @login_required
 @api_view(['POST'])

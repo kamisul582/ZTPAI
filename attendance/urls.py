@@ -15,6 +15,7 @@ from .views import (
     update_worktime_by_kiosk_code,
     get_employees,
     get_worker_worktime,
+    get_user_ids,
 )
 from .charts import template, line_chart_json
 # router = DefaultRouter()
@@ -44,6 +45,7 @@ urlpatterns = [
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('charts', template, name='charts'),
     path('chartJSON', line_chart_json, name='line_chart_json'),
+    path('get-user-ids/', get_user_ids, name='get_user_ids'),
 ]
 
 if settings.DEBUG:
