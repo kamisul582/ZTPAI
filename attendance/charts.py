@@ -36,15 +36,10 @@ class LineChartJSONView(BaseLineChartView):
         """Return datasets to plot based on your model data and extra data."""
         user_id = self.request.GET.get('user_id')
         worker = Worker.objects.get(user_id=user_id)
-        total_time = [entry.total_time.total_seconds()/3600 for entry in Worktime.objects.filter(worker_id=worker)]
-        punch_in = [entry.punch_in for entry in Worktime.objects.filter(worker_id=worker)]
-        punch_out = [entry.punch_out for entry in Worktime.objects.filter(worker_id=worker)]
+        total_time = [round(entry.total_time.total_seconds()/60,1) for entry in Worktime.objects.filter(worker_id=worker)]
         name_data = [entry.name for entry in Company.objects.all()]
 
-        if self.extra_data:
-            # Combine model data with extra data
-            total_time += self.extra_data.get('central', [])
-            name_data += self.extra_data.get('eastside', [])
+        
         
         return [total_time]
 

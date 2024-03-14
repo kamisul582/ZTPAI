@@ -43,7 +43,7 @@
     margin: 0;
     height: 100%;
     min-height: 100%;
-    overflow: hidden;
+    overflow: auto;
     }
     #worktime_table th, #employees_table th{
         background-color: #e6e6e6;
@@ -76,16 +76,40 @@
     background: transparent linear-gradient(180deg, #FFE5EC 0%, #9796F0 100%) 0% 0% no-repeat ;
     text-align: left;
     }
-    div.chartWrapper {
-    position: relative;
-    overflow: auto;
+    
+    .chartWrapper {
     width: 100%;
-    }
+    overflow: hidden; /* Hide the scrollbar by default */
+    position: relative; /* Position context for absolutely positioned elements */
+}
 
-    div.chartContainer {
-    position: relative;
-    height: 300px;
-    }
+.chartContainer {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto; /* Allow horizontal scrolling */
+    white-space: nowrap; /* Prevent line breaks */
+}
+
+.containerBody {
+    height: 500px;
+    display: inline-block; /* Ensure the container respects its width */
+    position: relative; /* Position context for absolutely positioned elements */
+}
+
+.yAxisLabels {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50px; /* Adjust as needed */
+    padding-right: 10px; /* Adjust as needed */
+    text-align: right; /* Align labels to the right */
+}
+
+.yAxisLabels div {
+    margin-bottom: 22px; /* Adjust as needed */
+    border: 1px;
+}
+    
     </style>
     {%endblock customcss%}
 </head>

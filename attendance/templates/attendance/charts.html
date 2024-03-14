@@ -11,86 +11,106 @@
 <h2>{{ company.name }} Company Profile </h2>
 <p><strong>User ID:</strong> {{ user.id }}</p>
 <p><strong>Email:</strong> {{ user.email }}</p>
-<h1>Some Line Charts loaded in Ajax!</h1>
+<h1>Total worktime of worker: </h1>
 
 
-        
+<select id="user_id_dropdown"></select>
+<div class="chartWrapper">
+    <div class="yAxisLabels"></div>
+    <div class="chartContainer">
+        <div class="containerBody">
+        <canvas id="myChart"></canvas>
+    </div>
+    </div>
+</div>
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
         <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
         <script type="text/javascript">
             $(document).ready(function() {
-                // Initialize the chart
-                var ctx = $("#myChart").get(0).getContext("2d");
-                var myChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: [],
-                        datasets: []
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-        
-                // Function to fetch chart data based on selected user_id
+                var myChart;
                 function fetchChartData(userId) {
+                    
                     var chartUrl = '{% url "attendance:line_chart_json" %}?user_id=' + userId;
                     $.get(chartUrl, function(data) {
-                        // Update the chart data
-                        myChart.data = data;
-                        myChart.update();
-                    });
+                        var myChartVar = null;
+                        if (myChart) {
+                            myChart.destroy();
+                                    }
+                        var ctx = $("#myChart").get(0).getContext("2d");
+                        var config = {
+                type: 'bar', 
+                data: data,
+                options: {
+                    //responsive: true,
+                    maintainAspectRatio: false,scales: {
+                        yAxes: [{
+                            ticks: {
+                                display: false, // Disable display of original Y-axis labels
+                            }
+            }]
+        }
                 }
+            }
+                        myChart = new Chart(ctx,config );
+            console.log("myChart");
+            console.log(myChart);
+            var yLabelsDiv = $('.yAxisLabels');
+        yLabelsDiv.empty(); // Clear previous content
+        if (typeof myChart !== 'undefined' && myChart !== null) {
+            var yAxis = myChart.scales['y-axis-0'];
+            if (typeof yAxis !== 'undefined' && yAxis !== null) {
+                var yAxisLabels = yAxis.ticks; // Access y-axis ticks
+                yLabelsDiv.append('<div>' +''+'</div>');
+                yAxisLabels.forEach(function(label) {
+                    yLabelsDiv.append('<div>' + label + '</div>'); // Append each label to the <div>
+                });
+            }
+        } else {
+            console.error('Chart is not defined or initialized.');
+        }
+            const containerBody = document.querySelector('.containerBody');
+            const totalLabels = myChart.data.labels.length
+            if(totalLabels > 25){
+                const newWidth = 900 + ((totalLabels - 25) * 36)
+                containerBody.style.width = `${newWidth}px`
+            }else{
+                containerBody.style.width = '900px'
+            }
+
+            // Adjust the width of the chart canvas dynamically
+            //var chartContainerWidth = $(".chart-container").width();
+            //chart.canvas.parentNode.style.width = chartContainerWidth + 'px';
+        });
+    }
         
                 // Populate dropdown with worker information
                 var dropdown = $('#user_id_dropdown');
-                dropdown.empty();
-                dropdown.append('<option selected="true" disabled>Select Worker</option>');
-                dropdown.prop('selectedIndex', 0);
-                var url = '{% url "attendance:get_user_ids" %}';
-                $.getJSON(url, function(data) {
-                    $.each(data.workers, function(key, worker) {
-                        var optionText = worker.firstname ? worker.firstname + ' ' + worker.lastname + ' (ID: ' + worker.user_id + ')' : 'ID: ' + worker.user_id;
-                        dropdown.append($('<option></option>').attr('value', worker.user_id).text(optionText));
-                    })
-                }).fail(function() {
-                    console.error('Failed to fetch worker information.');
-                });
-        
-                // Event listener for dropdown change
-                dropdown.on('change', function() {
-                    var userId = $(this).val();
-                    fetchChartData(userId);
-                });
-            });
-        
-            var xAxisLabelMinWidth = 15;
-            function fitChart(){
-                var chartCanvas = document.getElementById('chart');
-                var maxWidth = chartCanvas.parentElement.parentElement.clientWidth;
-                var width = Math.max(myChart.data.labels.length * xAxisLabelMinWidth, maxWidth);
-        
-                chartCanvas.parentElement.style.width = width +'px';
-            }
-        </script>
-        
-        <script type="text/javascript">
-            var xAxisLabelMinWidth = 15;
-            function fitChart(){
-                var chartCanvas = document.getElementById('chart');
-                var maxWidth = chartCanvas.parentElement.parentElement.clientWidth;
-                var width = Math.max(mayChart.data.labels.length * xAxisLabelMinWidth, maxWidth);
+    dropdown.empty();
+    dropdown.append('<option selected="true" disabled>Select Worker</option>');
+    dropdown.prop('selectedIndex', 0);
+    var url = '{% url "attendance:get_user_ids" %}';
+    $.getJSON(url, function(data) {
+        $.each(data.workers, function(key, worker) {
+            var optionText = worker.firstname && worker.lastname ? worker.firstname + ' ' + worker.lastname : 'ID: ' + worker.user_id;
+            optionText += ' (ID: ' + worker.user_id + ')';
+            dropdown.append($('<option></option>').attr('value', worker.user_id).text(optionText));
+        });
+    }).fail(function() {
+        console.error('Failed to fetch worker information.');
+    });
 
-                chartCanvas.parentElement.style.width = width +'px';
-}
+    // Event listener for dropdown change
+    dropdown.on('change', function() {
+        var userId = $(this).val();
+        fetchChartData(userId);
+        // Update the <h1> element with selected worker information
+        var selectedWorkerText = $('option:selected', this).text();
+        $('h1').text('Total worktime of worker: ' + selectedWorkerText);
+        
+    });
+});
         </script>
-        <select id="user_id_dropdown"></select>
-        <div class="chartWrapper">
-            <div class="chartContainer">
-                <canvas id="myChart"></canvas>
-            </div>
-        </div>
+        
 {% endif %}
 
 
