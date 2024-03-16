@@ -77,37 +77,45 @@
     text-align: left;
     }
     
-    .chartWrapper {
+    .chartCard {
     width: 100%;
     overflow: hidden; /* Hide the scrollbar by default */
     position: relative; /* Position context for absolutely positioned elements */
+    
 }
 
-.chartContainer {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto; /* Allow horizontal scrolling */
-    white-space: nowrap; /* Prevent line breaks */
+.chartBox {
+    width: 900px;
+    padding: 20px;
+    border-radius: 20px;
+    border: solid 3px rgba(54, 162, 235, 1);
+    background: white;
+    
 }
 
 .containerBody {
-    height: 500px;
-    display: inline-block; /* Ensure the container respects its width */
+    height: 600px;
+    /*display: inline-block;  Ensure the container respects its width */
     position: relative; /* Position context for absolutely positioned elements */
+    display: flex;
 }
 
-.yAxisLabels {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 50px; /* Adjust as needed */
-    padding-right: 10px; /* Adjust as needed */
-    text-align: right; /* Align labels to the right */
-}
 
-.yAxisLabels div {
-    margin-bottom: 22px; /* Adjust as needed */
-    border: 1px;
+.colSmall{
+    width: 30px;
+    height: 500px;
+}
+.colLarge{
+    max-width: 900px;
+    overflow-x: scroll;
+}
+.box{
+    width: calc(900px - 30px);
+    height: 500px;
+}
+.box2{
+    width: 30px;
+    height: 500px;
 }
     
     </style>

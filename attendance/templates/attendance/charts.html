@@ -15,71 +15,111 @@
 
 
 <select id="user_id_dropdown"></select>
-<div class="chartWrapper">
-    <div class="yAxisLabels"></div>
-    <div class="chartContainer">
+<div class="chartCard">
+    <div class="chartBox">
         <div class="containerBody">
-        <canvas id="myChart"></canvas>
-    </div>
+            <div class="colSmall">
+                <canvas id="myChart2"></canvas>
+            </div>
+            <div class="colLarge">
+                <div class="box">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
         <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
         <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
         <script type="text/javascript">
+            Chart.defaults.global.legend.display = false;
             $(document).ready(function() {
                 var myChart;
+                var myChart2;
                 function fetchChartData(userId) {
                     
                     var chartUrl = '{% url "attendance:line_chart_json" %}?user_id=' + userId;
                     $.get(chartUrl, function(data) {
-                        var myChartVar = null;
                         if (myChart) {
                             myChart.destroy();
                                     }
+                        if (myChart2) {
+                            myChart2.destroy();
+                                    }
                         var ctx = $("#myChart").get(0).getContext("2d");
-                        var config = {
+                        var ctx2 = $("#myChart2").get(0).getContext("2d");
+                        
+                
+                        
+            var config = {
                 type: 'bar', 
                 data: data,
                 options: {
-                    //responsive: true,
-                    maintainAspectRatio: false,scales: {
+                    maintainAspectRatio: false,
+                    layout:{
+                        padding:{
+                            top: 20,
+                        },
+                    },
+                    scales: {
                         yAxes: [{
+                            beginAtZero: true,
                             ticks: {
-                                display: false, // Disable display of original Y-axis labels
-                            }
-            }]
-        }
+                                display: false, 
+                                    },
+                            grid: [{
+                                drawTicks: false,
+                                drawBorder: false,
+                            }],
+                                },]
+                        
+                            },
                 }
             }
+            var config2 = {
+                type: 'bar', 
+                data: data,
+                options: {
+                    maintainAspectRatio: false,
+                    layout:{
+                        padding:{
+                            top: 20,
+                            bottom: 38,
+                        },
+                    },
+                    scales: {
+                        xAxes:[{
+                            display:false,
+                            ticks: {
+                                display: false, 
+                                    },
+                            grid: {
+                                drawTicks: false,
+                            },
+                        },],
+                        yAxes: [{
+                                beginAtZero: true,
+                                afterFit:(ctx2) => {
+                                    console.log(ctx2);
+                                    ctx2.width = 30;
+                                }
+                                }]
+                            },
+                        }
+            }
                         myChart = new Chart(ctx,config );
+                        myChart2 = new Chart(ctx2,config2 );
             console.log("myChart");
             console.log(myChart);
-            var yLabelsDiv = $('.yAxisLabels');
-        yLabelsDiv.empty(); // Clear previous content
-        if (typeof myChart !== 'undefined' && myChart !== null) {
-            var yAxis = myChart.scales['y-axis-0'];
-            if (typeof yAxis !== 'undefined' && yAxis !== null) {
-                var yAxisLabels = yAxis.ticks; // Access y-axis ticks
-                yLabelsDiv.append('<div>' +''+'</div>');
-                yAxisLabels.forEach(function(label) {
-                    yLabelsDiv.append('<div>' + label + '</div>'); // Append each label to the <div>
-                });
-            }
-        } else {
-            console.error('Chart is not defined or initialized.');
-        }
-            const containerBody = document.querySelector('.containerBody');
+            console.log(myChart2);
+        
+            const box = document.querySelector('.box');
             const totalLabels = myChart.data.labels.length
             if(totalLabels > 25){
+                console.log("over 25");
                 const newWidth = 900 + ((totalLabels - 25) * 36)
-                containerBody.style.width = `${newWidth}px`
-            }else{
-                containerBody.style.width = '900px'
+                box.style.width = `${newWidth}px`
             }
-
-            // Adjust the width of the chart canvas dynamically
-            //var chartContainerWidth = $(".chart-container").width();
-            //chart.canvas.parentNode.style.width = chartContainerWidth + 'px';
         });
     }
         
