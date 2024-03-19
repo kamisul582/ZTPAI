@@ -18,8 +18,10 @@ from .forms import (
     RegisterCompanyForm,
     RegisterWorkerForm,
     RegistrationChoiceForm,
+    RegisterManagerForm,
+    AddSubordinateForm
 )
-from .models import CustomUser, Worktime, Company, Worker
+from .models import CustomUser, Worktime, Company, Worker, Manager
 from .decorators import only_authenticated_user, redirect_authenticated_user
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
@@ -35,7 +37,8 @@ def home_view(request):
     user = CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
-    if user.is_worker:
+    error = None
+    if user.is_worker or user.is_manager:
         try:
             worker = Worker.objects.get(user_id=user_id)
         except ObjectDoesNotExist:
@@ -49,7 +52,7 @@ def home_view(request):
         company = Company.objects.get(user_id=user_id)
         form = KioskCodeForm()
         return render(request, 'attendance/home.html', {'users': user, 'company': company, 'user_id': user_id, 'form': form})
-
+    return redirect('attendance:logout')
 
 @only_authenticated_user
 def get_worker_worktime(request, user_id):
@@ -71,6 +74,19 @@ def get_company_from_user(user_id):
         return None
     return Company.objects.get(user_id=user_id)
 
+def get_manager_from_user(user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    if not user.is_manager:
+        print("user is not manager", user.is_company)
+        return None
+    return Manager.objects.get(user_id=user_id)
+
+def get_worker_from_user(user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    if not user.is_manager:
+        print("user is not worker", user.is_company)
+        return None
+    return Worker.objects.get(user_id=user_id)
 
 def build_filter_q(request, filter_fields):
     filter_q = Q()
@@ -86,13 +102,30 @@ def build_filter_q(request, filter_fields):
 
     return filter_q, filter_values
 
+@only_authenticated_user
+def add_subordinates(request):
+    manager = get_manager_from_user(request.user.id)
+    if request.method == 'POST':
+        form = AddSubordinateForm(request.POST)
+        if form.is_valid():
+            subordinates = form.cleaned_data['subordinates']
+            print(subordinates)
+            print(hasattr(manager, 'subordinates'))
+            print(type(manager.subordinates))
+            manager.subordinates.add(*subordinates)
+
+            return redirect('success_url')  # Redirect to a success URL
+    else:
+        form = AddSubordinateForm()
+    return render(request, 'attendance/add_subordinates.html', {'form': form, 'manager': manager})
 
 @only_authenticated_user
 # @api_view(['GET'])
 def get_employees(request, sort='user_id', filter=''):
     company = get_company_from_user(request.user.id)
-
-    if not company:
+    manager = get_manager_from_user(request.user.id)
+    print(company,manager)
+    if not company and not manager:
         return JsonResponse({'error': 'User is not associated with a company'})
 
     sort_param = request.GET.get('sort', 'user_id')
@@ -128,7 +161,9 @@ def add_worktime(request, worker=None):
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         if worker is None:
-            worker = Worker.objects.get(user_id=user_id)
+            worker = get_worker_from_user(user_id)
+        if worker is None:
+            worker = get_manager_from_user(user_id)
         existing_entry = Worktime.objects.filter(worker=worker, punch_out__isnull=True).first()
 
         if existing_entry:
@@ -214,6 +249,7 @@ STEP_ONE = u'0'
 STEP_TWO = u'1'
 STEP_THREE = u'2'
 STEP_FOUR = u'3'
+STEP_FIVE = u'4'
 
 
 class MyWizard(SessionWizardView):
@@ -239,12 +275,20 @@ class MyWizard(SessionWizardView):
                 return True
             else:
                 return False
-
+    def check_step_four(wizard):
+        step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
+        if step_1_info:
+            if step_1_info['registration_choice'] == 'manager':
+                print("step_1_info", step_1_info)
+                return True
+            else:
+                return False
     condition_dict = {
         STEP_ONE: return_true,
         STEP_TWO: return_true,
         STEP_THREE: check_step_two,
         STEP_FOUR: check_step_three,
+        STEP_FIVE: check_step_four,
     }
 
     form_list = [
@@ -252,6 +296,7 @@ class MyWizard(SessionWizardView):
         (STEP_TWO, CustomUserCreationForm),
         (STEP_THREE, RegisterCompanyForm),
         (STEP_FOUR, RegisterWorkerForm),
+        (STEP_FIVE, RegisterManagerForm),
     ]
 
 
@@ -290,19 +335,33 @@ class RegistrationWizardView(MyWizard):
             user.is_worker = True
             user.save()
             return redirect('attendance:login')
+        elif data['registration_choice'] == 'manager':
+
+            Manager.objects.create(
+                user=user,
+                company=data['company'],
+                firstname=data['firstname'],
+                lastname=data['lastname'],
+                kiosk_code=generate_kiosk_code(company=data['company'])
+            )
+            user.is_manager = True
+            user.save()
+            return redirect('attendance:login')
         else:
             return render(self.request, 'attendance/registration_error.html')
 
 
 def generate_kiosk_code(company):
     workers = Worker.objects.filter(company=company)
-    print("workers", workers)
+    managers = Manager.objects.filter(company=company)
     codes = []
     i = 0
     while i < 20:
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         for worker in workers:
             codes.append(worker.kiosk_code)
+        for manager in managers:
+            codes.append(manager.kiosk_code)
         print("codes", codes)
         if code in codes:
             i += 1

@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 class CustomUser(AbstractUser):
     is_worker = models.BooleanField(default=False)
     is_company = models.BooleanField(default=False)
+    is_manager = models.BooleanField(default=False)
     # Add related_name to avoid clashes
     groups = models.ManyToManyField(
         Group,
@@ -46,18 +47,27 @@ def create_or_update_company(sender, instance, created, **kwargs):
     elif not created and instance.is_company:
         instance.company.save()
 
-
+class Manager(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    firstname = models.TextField(_('firstname'), max_length=500, blank=True)
+    lastname = models.TextField(_('lastname'), max_length=255, blank=True)
+    kiosk_code = models.CharField(_('kiosk_code'), max_length=10, blank=True)
+    
 class Worker(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     firstname = models.TextField(_('firstname'), max_length=500, blank=True)
     lastname = models.TextField(_('lastname'), max_length=255, blank=True)
     kiosk_code = models.CharField(_('kiosk_code'), max_length=10, blank=True)
+    manager = models.ForeignKey(Manager, related_name='managed_workers', on_delete=models.SET_NULL, blank=True, null=True)
+
 
     def __str__(self):
         return f"""{self.id} {self.user} -> {self.firstname}
                 {self.lastname} {self.kiosk_code}
                 works in {self.company} """
+    
 
 
 class Worktime(models.Model):

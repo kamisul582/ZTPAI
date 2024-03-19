@@ -16,6 +16,7 @@ from .views import (
     get_employees,
     get_worker_worktime,
     get_user_ids,
+    add_subordinates,
 )
 from .charts import template, line_chart_json
 # router = DefaultRouter()
@@ -41,6 +42,7 @@ urlpatterns = [
     path('get-worktime-details/<int:entry_id>/', get_worktime_details, name='get_worktime_details'),
     path('get-worker-worktime/<int:user_id>/', get_worker_worktime, name='get_worker_worktime'),
     path('get-employees/', get_employees, name='get_employees'),
+    path('add-subordinates/', add_subordinates, name='add_subordinates'),
     path('get-employees/<str:sort>/<str:filter>/', get_employees, name='get_employees'),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('charts', template, name='charts'),

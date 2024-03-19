@@ -1,34 +1,18 @@
 from django import forms
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib.auth.forms import UserChangeForm
-from django.contrib.auth.forms import UsernameField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField,UserCreationForm,UserChangeForm,UsernameField
 from django.utils.translation import gettext_lazy as _
 # Register your models here.
 from .models import (
     CustomUser,
+    Company
 )
 
 
-class CustomUserCreationForm(forms.ModelForm):
-    password1 = forms.CharField(
-        label=_('password'), widget=forms.PasswordInput)
-    password2 = forms.CharField(
-        label=_('confirm password'), widget=forms.PasswordInput)
-
+class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = ('email', 'username')
-        help_texts = {
-            'username': None,
-            'email': None,
-        }
-        labels = {
-            'username': 'username:',
-            'email': 'email:',
-            'password1': 'password:',
-            'password2': 'password:'
-        }
+        fields = UserCreationForm.Meta.fields + ('email',)
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -79,8 +63,6 @@ class CustomUserAdmin(UserAdmin):
     )
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
-        (_('Personal info'), {
-         'fields': ('first_name', 'last_name', 'bio', 'short_bio', 'profile_picture')}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
