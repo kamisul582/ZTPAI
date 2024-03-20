@@ -47,20 +47,14 @@ def create_or_update_company(sender, instance, created, **kwargs):
     elif not created and instance.is_company:
         instance.company.save()
 
-class Manager(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    firstname = models.TextField(_('firstname'), max_length=500, blank=True)
-    lastname = models.TextField(_('lastname'), max_length=255, blank=True)
-    kiosk_code = models.CharField(_('kiosk_code'), max_length=10, blank=True)
-    
+
 class Worker(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     firstname = models.TextField(_('firstname'), max_length=500, blank=True)
     lastname = models.TextField(_('lastname'), max_length=255, blank=True)
     kiosk_code = models.CharField(_('kiosk_code'), max_length=10, blank=True)
-    manager = models.ForeignKey(Manager, related_name='managed_workers', on_delete=models.SET_NULL, blank=True, null=True)
+    manager = models.ForeignKey('self', related_name='subordinate', on_delete=models.SET_NULL, blank=True, null=True)
 
 
     def __str__(self):

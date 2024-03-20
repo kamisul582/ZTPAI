@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import validate_email
 from django import forms
-from .models import Company, Worker, CustomUser, Manager
+from .models import Company, Worker, CustomUser
 
 
 class CustomLoginForm(forms.Form):
@@ -81,8 +81,13 @@ class RegisterCompanyForm(forms.ModelForm):
         }
 
 class AddSubordinateForm(forms.Form):
-    subordinates = forms.ModelMultipleChoiceField(queryset=Worker.objects.all(), widget=forms.CheckboxSelectMultiple)
-    
+    def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company')
+        super(AddSubordinateForm, self).__init__(*args, **kwargs)
+        self.fields['subordinates'].queryset = Worker.objects.filter(company=company)
+
+    subordinates = forms.ModelMultipleChoiceField(queryset=Worker.objects.none(), widget=forms.CheckboxSelectMultiple)
+
 class RegisterWorkerForm(forms.ModelForm):
     class Meta:
         model = Worker
@@ -91,14 +96,7 @@ class RegisterWorkerForm(forms.ModelForm):
             'firstname': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
             'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
         }
-class RegisterManagerForm(forms.ModelForm):
-    class Meta:
-        model = Manager
-        fields = ['company', 'firstname', 'lastname',]  # Add worker-specific fields here
-        widgets = {
-            'firstname': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
-            'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
-        }
+
 
 class ForgetPasswordEmailCodeForm(forms.Form):
     username_or_email = forms.CharField(max_length=256,
