@@ -55,6 +55,7 @@ class Worker(models.Model):
     lastname = models.TextField(_('lastname'), max_length=255, blank=True)
     kiosk_code = models.CharField(_('kiosk_code'), max_length=10, blank=True)
     manager = models.ForeignKey('self', related_name='subordinate', on_delete=models.SET_NULL, blank=True, null=True)
+    is_activated = models.BooleanField(default=False)
 
 
     def __str__(self):

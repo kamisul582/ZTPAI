@@ -8,7 +8,12 @@ from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.shortcuts import redirect, render
-
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
 from attendance.admin import CustomUserCreationForm
 from .forms import (
@@ -241,7 +246,29 @@ def logout_view(request):
     logout(request)
     return redirect('attendance:login')
 
+class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        return (
+            str(user.pk) + str(timestamp)  + str(user.is_active)
+        )
+account_activation_token = AccountActivationTokenGenerator()
 
+def activateEmail(request, user, to_email):
+    mail_subject = 'Activate your user account.'
+    message = render_to_string('attendance/template_activate_account.html', {
+        'user': user.username,
+        'domain': get_current_site(request).domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': account_activation_token.make_token(user),
+        'protocol': 'https' if request.is_secure() else 'http'
+    })
+    email = EmailMessage(mail_subject, message, to=[to_email])
+    if email.send():
+        messages.success(request, f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
+            received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
+    else:
+        messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
+        
 STEP_ONE = u'0'
 STEP_TWO = u'1'
 STEP_THREE = u'2'
@@ -300,6 +327,7 @@ class RegistrationWizardView(MyWizard):
             email=data['email'],
             password=data['password1']
         )
+        user.is_active = False
 
         if data['registration_choice'] == 'company':
             Company.objects.create(
@@ -309,6 +337,7 @@ class RegistrationWizardView(MyWizard):
             )
             user.is_company = True
             user.save()
+            activateEmail(self.request, user, form.cleaned_data.get('email'))
             return redirect('attendance:login')
         elif data['registration_choice'] == 'worker' or data['registration_choice'] == 'manager':
 
@@ -323,6 +352,7 @@ class RegistrationWizardView(MyWizard):
             if data['registration_choice'] == 'manager':
                 user.is_manager = True
             user.save()
+            activateEmail(self.request, user, form.cleaned_data.get('email'))
             return redirect('attendance:login')
         else:
             return render(self.request, 'attendance/registration_error.html')
