@@ -11,6 +11,11 @@ login
     {{error}}
 </div>
 {%endif%}
+{%if data.message%}
+<div class="alert alert-danger" role="alert">
+    {{data.message}}
+</div>
+{%endif%}
 <form method="post">
     {%csrf_token%}
     {%include 'attendance/form_snippets.html' with form=form%}                

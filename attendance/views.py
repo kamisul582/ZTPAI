@@ -2,7 +2,7 @@ import json
 from django.utils import timezone
 import random
 import string
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
@@ -211,7 +211,7 @@ def update_worktime_by_kiosk_code(request):
             response_data = response.content.decode("UTF-8")
             worker_info = f"{worker.firstname} {worker.lastname}"
             if 'entry_id' in response_data:
-                return JsonResponse({'status': 'success', 'message':
+                return H({'status': 'success', 'message':
                                      "Successfully created a new worktime entry for: ", 'worker': worker_info})
             return JsonResponse({'status': 'success', 'message':
                                  "Successfully updated an existing worktime entry for: ", 'worker': worker_info})
@@ -253,6 +253,24 @@ class AccountActivationTokenGenerator(PasswordResetTokenGenerator):
         )
 account_activation_token = AccountActivationTokenGenerator()
 
+def activate(request, uidb64, token):
+    User = get_user_model()
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+
+        messages.success(request, 'Thank you for your email confirmation. Now you can login your account.')
+        return redirect('attendance:login')
+    else:
+        messages.error(request, 'Activation link is invalid!')
+    print("user",user,"token check",account_activation_token.check_token(user, token),"token",token)
+    return redirect('homepage')
 def activateEmail(request, user, to_email):
     mail_subject = 'Activate your user account.'
     message = render_to_string('attendance/template_activate_account.html', {
@@ -263,12 +281,23 @@ def activateEmail(request, user, to_email):
         'protocol': 'https' if request.is_secure() else 'http'
     })
     email = EmailMessage(mail_subject, message, to=[to_email])
+    #if email.send():
+    #    messages.success(request, f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
+    #        received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
+    #else:
+    #    messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
     if email.send():
-        messages.success(request, f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
-            received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
+        print("worked")
+        return JsonResponse({'status': 'success', 'message':
+                                 f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
+                                    received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.'})
     else:
-        messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
-        
+        print(email,"failed")
+        print(email.subject,email.body,email.to)
+        print(email.self)
+        return JsonResponse({'status': 'success', 'message':
+                             f'Problem sending confirmation email to {to_email}, check if you typed it correctly.'})
+    
 STEP_ONE = u'0'
 STEP_TWO = u'1'
 STEP_THREE = u'2'
@@ -337,7 +366,7 @@ class RegistrationWizardView(MyWizard):
             )
             user.is_company = True
             user.save()
-            activateEmail(self.request, user, form.cleaned_data.get('email'))
+            activateEmail(self.request, user, data['email'])
             return redirect('attendance:login')
         elif data['registration_choice'] == 'worker' or data['registration_choice'] == 'manager':
 
@@ -352,7 +381,7 @@ class RegistrationWizardView(MyWizard):
             if data['registration_choice'] == 'manager':
                 user.is_manager = True
             user.save()
-            activateEmail(self.request, user, form.cleaned_data.get('email'))
+            activateEmail(self.request, user, data['email'])
             return redirect('attendance:login')
         else:
             return render(self.request, 'attendance/registration_error.html')
