@@ -234,8 +234,12 @@ def login_view(request):
     user = authenticate(
         request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
     if user:
-        login(request, user)
-        return redirect('attendance:home')
+        if user.is_active:
+            login(request, user)
+            return redirect('attendance:home')
+        activateEmail(request, user, user.email)
+        error = f'Account is not active. Activation email was sent to {user.email}' 
+        return render(request, 'attendance/login.html', {'form': form, 'error': error})
     error = 'Authentication error'
     return render(request, 'attendance/login.html', {'form': form, 'error': error})
 
@@ -264,13 +268,14 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
-
+        print("success")
         messages.success(request, 'Thank you for your email confirmation. Now you can login your account.')
         return redirect('attendance:login')
     else:
         messages.error(request, 'Activation link is invalid!')
-    print("user",user,"token check",account_activation_token.check_token(user, token),"token",token)
-    return redirect('homepage')
+        print("user",user,"token check",account_activation_token.check_token(user, token),"token",token)
+        return render(request,'attendance/invalid_token.html')
+    
 def activateEmail(request, user, to_email):
     mail_subject = 'Activate your user account.'
     message = render_to_string('attendance/template_activate_account.html', {
@@ -286,17 +291,18 @@ def activateEmail(request, user, to_email):
     #        received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
     #else:
     #    messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
-    if email.send():
-        print("worked")
-        return JsonResponse({'status': 'success', 'message':
+    print(email.subject,email.body,email.to)
+    #if email.send():
+    print("worked")
+    return JsonResponse({'status': 'success', 'message':
                                  f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
                                     received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.'})
-    else:
-        print(email,"failed")
-        print(email.subject,email.body,email.to)
-        print(email.self)
-        return JsonResponse({'status': 'success', 'message':
-                             f'Problem sending confirmation email to {to_email}, check if you typed it correctly.'})
+    #else:
+    #    print(email,"failed")
+    #    print(email.subject,email.body,email.to)
+    #    print(email.self)
+    #    return JsonResponse({'status': 'success', 'message':
+    #                         f'Problem sending confirmation email to {to_email}, check if you typed it correctly.'})
     
 STEP_ONE = u'0'
 STEP_TWO = u'1'
