@@ -20,6 +20,7 @@ from .views import (
     activate,
 )
 from .charts import template, line_chart_json
+from .file_handlers import upload_file
 # router = DefaultRouter()
 # router.register('data', RegistrationWizardView, basename='data')
 # urlpatterns = router.urls
@@ -50,6 +51,7 @@ urlpatterns = [
     path('charts', template, name='charts'),
     path('chartJSON', line_chart_json, name='line_chart_json'),
     path('get-user-ids/', get_user_ids, name='get_user_ids'),
+    path('upload/', upload_file, name='upload_file'),
 ]
 
 if settings.DEBUG:

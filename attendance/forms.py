@@ -97,6 +97,8 @@ class RegisterWorkerForm(forms.ModelForm):
             'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
         }
 
+class FileUploadForm(forms.Form):
+    file = forms.FileField()
 
 class ForgetPasswordEmailCodeForm(forms.Form):
     username_or_email = forms.CharField(max_length=256,

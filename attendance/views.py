@@ -211,7 +211,7 @@ def update_worktime_by_kiosk_code(request):
             response_data = response.content.decode("UTF-8")
             worker_info = f"{worker.firstname} {worker.lastname}"
             if 'entry_id' in response_data:
-                return H({'status': 'success', 'message':
+                return ({'status': 'success', 'message':
                                      "Successfully created a new worktime entry for: ", 'worker': worker_info})
             return JsonResponse({'status': 'success', 'message':
                                  "Successfully updated an existing worktime entry for: ", 'worker': worker_info})
