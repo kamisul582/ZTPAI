@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+{% extends 'shared_layout/base.html' %}
+
+{%block title%}
+file upload
+{%endblock title%}
+
+{%block contents%}
+{%if error%}
+<div class="alert alert-danger" role="alert">
+    {{error}}
+</div>
+{%endif%}
+{% if message %}
+    <p>{{ message }}</p>
+{% endif %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function exportWorktime() {
+            // Serialize form data
+            var formData = $('#worktimeForm').serialize();
+    
+            // Submit form asynchronously
+            $.ajax({
+                url: '{% url "attendance:worktime_export" %}',
+                method: 'GET',
+                data: formData,
+                success: function(response) {
+                    // Create blob from response content
+                    var blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    
+                    // Create object URL for blob
+                    var url = window.URL.createObjectURL(blob);
+                    
+                    // Create link element and trigger download
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'worktime_export.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+    
+                    // Cleanup
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+        }
+    </script>
+
+    <form id="worktimeForm" method="GET">
+        <label for="year">Select Year:</label>
+        <select name="year" id="year">
+            {% for year in years %}
+                <option value="{{ year }}">{{ year }}</option>
+            {% endfor %}
+        </select>
+        <label for="month">Select Month:</label>
+        <select name="month" id="month">
+            {% for month_num, month_name in months.items %}
+                <option value="{{ month_num }}">{{ month_name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" onclick="exportWorktime()">Export</button>
+    </form>
+{% if worktime_entries %}
+    <p>{{ worktime_entries}}</p>
+{% endif %}
+
+{%endblock contents%}

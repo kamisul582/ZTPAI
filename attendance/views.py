@@ -159,7 +159,7 @@ def get_user_ids(request):
     print(workers)
     return JsonResponse({'workers': list(workers)})
 
-def get_employed_user_ids(request):
+def get_employed_user_ids_json(request):
     
     company = get_company_from_user(request.user.id)
     if company:
@@ -171,6 +171,18 @@ def get_employed_user_ids(request):
         workers = Worker.objects.filter(manager=manager).values('user_id', 'firstname','lastname')
     print(workers)
     return JsonResponse({'workers': list(workers)})
+def get_employed_user_ids(request):
+    
+    company = get_company_from_user(request.user.id)
+    if company:
+        print("company",company)
+        workers = Worker.objects.all().values('user_id', 'firstname','lastname')
+    if request.user.is_manager:
+        manager = get_worker_from_user(request.user.id)
+        print("manager",manager)
+        workers = Worker.objects.filter(manager=manager)
+    print(workers)
+    return workers
 @login_required
 @api_view(['POST'])
 def add_worktime(request, worker=None):

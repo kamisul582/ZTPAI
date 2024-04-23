@@ -18,10 +18,11 @@ from .views import (
     get_user_ids,
     add_subordinates,
     activate,
-    get_employed_user_ids,
+    get_employed_user_ids_json,
 )
 from .charts import template, line_chart_json
 from .file_handlers import upload_file
+from .worktime_report import WorktimeExportView,worktime_export
 # router = DefaultRouter()
 # router.register('data', RegistrationWizardView, basename='data')
 # urlpatterns = router.urls
@@ -52,8 +53,10 @@ urlpatterns = [
     path('charts', template, name='charts'),
     path('chartJSON', line_chart_json, name='line_chart_json'),
     path('get-user-ids/', get_user_ids, name='get_user_ids'),
-    path('get-employed-user-ids/', get_employed_user_ids, name='get_employed_user_ids'),
+    path('get-employed-user-ids/', get_employed_user_ids_json, name='get_employed_user_ids_json'),
     path('upload/', upload_file, name='upload_file'),
+    path('report', WorktimeExportView.as_view(),name='report'),
+    path('worktime-export/', worktime_export, name='worktime_export'),
 ]
 
 if settings.DEBUG:
