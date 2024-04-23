@@ -154,10 +154,23 @@ def get_employees(request, sort='user_id', filter=''):
     return render(request, 'attendance/employees.html', context)
 
 def get_user_ids(request):
+    print("no manager")
     workers = Worker.objects.all().values('user_id', 'firstname','lastname')
     print(workers)
     return JsonResponse({'workers': list(workers)})
 
+def get_employed_user_ids(request):
+    
+    company = get_company_from_user(request.user.id)
+    if company:
+        print("company",company)
+        workers = Worker.objects.all().values('user_id', 'firstname','lastname')
+    if request.user.is_manager:
+        manager = get_worker_from_user(request.user.id)
+        print("manager",manager)
+        workers = Worker.objects.filter(manager=manager).values('user_id', 'firstname','lastname')
+    print(workers)
+    return JsonResponse({'workers': list(workers)})
 @login_required
 @api_view(['POST'])
 def add_worktime(request, worker=None):
@@ -292,10 +305,10 @@ def activateEmail(request, user, to_email):
     #else:
     #    messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
     print(email.subject,email.body,email.to)
-    #if email.send():
-    print("worked")
+    if email.send():
+        print("worked")
     return JsonResponse({'status': 'success', 'message':
-                                 f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
+                                 f'Dear <b>{user}</b>, please go to your email <b>{to_email}</b> inbox and click on \
                                     received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.'})
     #else:
     #    print(email,"failed")

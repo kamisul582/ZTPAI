@@ -128,7 +128,9 @@
     dropdown.empty();
     dropdown.append('<option selected="true" disabled>Select Worker</option>');
     dropdown.prop('selectedIndex', 0);
-    var url = '{% url "attendance:get_user_ids" %}';
+    //var requesting_user_id = "{{ user.id }}";
+    //var url = '/get-user-ids/' + requesting_user_id + '/';
+    var url = '{% url "attendance:get_employed_user_ids" %}';
     $.getJSON(url, function(data) {
         $.each(data.workers, function(key, worker) {
             var optionText = worker.firstname && worker.lastname ? worker.firstname + ' ' + worker.lastname : 'ID: ' + worker.user_id;

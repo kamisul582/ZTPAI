@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'chartjs'
 ]
-#biot rfqo rsbd cump
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -149,7 +148,6 @@ LOGIN_URL = 'attendance:login'
 AUTHENTICATION_BACKENDS = [
     'attendance.backends.EmailOrUsernameModelBackend'
 ]
-
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ["EMAIL_HOST"]
