@@ -175,11 +175,10 @@ def get_employed_user_ids(request):
     
     company = get_company_from_user(request.user.id)
     if company:
-        print("company",company)
-        workers = Worker.objects.all().values('user_id', 'firstname','lastname')
+        #workers = Worker.objects.all().values('user_id', 'firstname','lastname')
+        workers = Worker.objects.filter(company=company)
     if request.user.is_manager:
         manager = get_worker_from_user(request.user.id)
-        print("manager",manager)
         workers = Worker.objects.filter(manager=manager)
     print(workers)
     return workers

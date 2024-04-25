@@ -18,6 +18,9 @@
         <li class="nav-item">
           <a class="nav-link" href="{%url 'attendance:charts'%}">Charts</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{%url 'attendance:worktime_export'%}">Worktime Export</a>
+        </li>
         {%endif%}
         {%if user.is_manager and user.is_authenticated%}
         <li class="nav-item">
@@ -25,6 +28,9 @@
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{%url 'attendance:charts'%}">Charts</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{%url 'attendance:worktime_export'%}">Worktime Export</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{%url 'attendance:add_subordinates'%}">Add Subordinates</a>

@@ -59,9 +59,7 @@ class Worker(models.Model):
 
 
     def __str__(self):
-        return f"""{self.id} {self.user} -> {self.firstname}
-                {self.lastname} {self.kiosk_code}
-                works in {self.company} """
+        return f"""{self.id}. {self.firstname} {self.lastname}"""
     
 
 
