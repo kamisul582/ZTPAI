@@ -28,7 +28,7 @@ class LineChartJSONView(BaseLineChartView):
 
         Override this method to provide custom colors.
         """
-        colors = [(255, 87, 51)]  # Example color as RGB tuple
+        colors = [(54, 162, 235)]  # Example color as RGB tuple
         return iter(colors)
 
     

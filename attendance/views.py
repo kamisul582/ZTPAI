@@ -180,6 +180,8 @@ def get_employed_user_ids(request):
     if request.user.is_manager:
         manager = get_worker_from_user(request.user.id)
         workers = Worker.objects.filter(manager=manager)
+    if request.user.is_worker and not request.user.is_manager:
+        workers = [get_worker_from_user(request.user.id)]
     print(workers)
     return workers
 @login_required
