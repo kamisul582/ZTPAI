@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     is_worker = models.BooleanField(default=False)
     is_company = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False)
+    password_change_required = models.BooleanField(default=False)
     # Add related_name to avoid clashes
     groups = models.ManyToManyField(
         Group,

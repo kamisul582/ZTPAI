@@ -126,6 +126,15 @@ class ForgetPasswordEmailCodeForm(forms.Form):
 
 
 class ChangePasswordForm(forms.Form):
+    email = forms.CharField(
+        label="Email",
+        widget=forms.EmailInput(
+            attrs={
+                'class': 'form-control',
+                'placeholder': 'Email'
+            }
+        ),
+    )
     new_password1 = forms.CharField(
         label="New password",
         widget=forms.PasswordInput(

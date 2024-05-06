@@ -154,7 +154,6 @@ def get_employees(request, sort='user_id', filter=''):
     return render(request, 'attendance/employees.html', context)
 
 def get_user_ids(request):
-    print("no manager")
     workers = Worker.objects.all().values('user_id', 'firstname','lastname')
     print(workers)
     return JsonResponse({'workers': list(workers)})
@@ -434,14 +433,13 @@ def generate_kiosk_code(company):
             return code
 
 
-@redirect_authenticated_user
-@api_view(['POST'])
+#@redirect_authenticated_user
+#@api_view(['POST'])
 def reset_new_password_view(request):
     if request.method == 'POST':
         form = ChangePasswordForm(request.POST)
         if form.is_valid():
-            email = request.session['email']
-            del request.session['email']
+            email = form.cleaned_data["email"]
             user = CustomUser.objects.get(email=email)
             user.password = make_password(form.cleaned_data["new_password2"])
             user.save()

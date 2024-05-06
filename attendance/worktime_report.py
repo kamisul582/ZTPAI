@@ -28,14 +28,11 @@ class WorktimeExportView(View):
             year = int(request.GET.get('year'))
             worker = request.GET.get('worker')
             worker_id=int(worker[0]) if worker else ""
-            print("month,year,worker_id",month,year,worker_id)
             start_date = datetime(year, month, 1)
             end_date = datetime(year, month % 12 + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
-            workers = get_employed_user_ids(request)
-            print(workers)
+            workers = get_employed_user_ids(request) #get all manager subordinates or company employees
             worktimes = Worktime.objects.filter(worker_id__in=workers,date__gte=start_date, date__lt=end_date)
             if worker_id:
-                print("worker_id",worker_id,type(worker_id))
                 worktimes = worktimes.filter(worker_id=worker_id)
             output = io.BytesIO()
             workbook = xlsxwriter.Workbook(output)
