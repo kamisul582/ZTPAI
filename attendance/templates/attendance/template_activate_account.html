@@ -4,4 +4,9 @@ Hi {{ user.username }},
 Please click on the link below to confirm your registration:
 
 http://{{ domain }}{% url 'attendance:activate' uidb64=uid token=token %}
+
+If the account was created by your employer, you will need to set a password for your account.
+
+Use this link to set the password:
+http://{{ domain }}{%url 'attendance:reset_new_password_view'%}
 {% endautoescape %}

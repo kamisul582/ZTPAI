@@ -28,6 +28,7 @@ class CustomUser(AbstractUser):
             self.is_company = False
         elif self.is_company:
             self.is_worker = False
+            self.is_manager = False
 
         super().save(*args, **kwargs)
 

@@ -253,13 +253,17 @@ def login_view(request):
         form = CustomLoginForm()
         return render(request, 'attendance/login.html', {'form': form, 'error': error})
     form = CustomLoginForm(request.POST)
+    #print("data",form.cleaned_data['username_or_email'], form.cleaned_data['password'])
     if not form.is_valid():
         error = 'Invalid Credentials'
+        print("invalid")
         return render(request, 'attendance/login.html', {'form': form, 'error': error})
     user = authenticate(
         request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
     if user:
+        print("user")
         if user.is_active:
+            print("active")
             login(request, user)
             return redirect('attendance:home')
         activateEmail(request, user, user.email)
@@ -406,7 +410,7 @@ class RegistrationWizardView(MyWizard):
                 company=data['company'],
                 firstname=data['firstname'],
                 lastname=data['lastname'],
-                kiosk_code=generate_kiosk_code(company=data['company'])
+                kiosk_code=generate_kiosk_codes(company=data['company'])[0]
             )
             user.is_worker = True
             if data['registration_choice'] == 'manager':
@@ -418,20 +422,20 @@ class RegistrationWizardView(MyWizard):
             return render(self.request, 'attendance/registration_error.html')
 
 
-def generate_kiosk_code(company):
+def generate_kiosk_codes(company,amount = 1):
     workers = Worker.objects.filter(company=company)
-    codes = []
+    valid_codes = []
+    used_codes = [worker.kiosk_code for worker in workers]
     i = 0
-    while i < 20:
+    while i < 1000 and len(valid_codes) < amount:
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        for worker in workers:
-            codes.append(worker.kiosk_code)
-        print("codes", codes)
-        if code in codes:
+        print("used_codes", used_codes)
+        if code in used_codes:
             i += 1
         else:
-            return code
-
+            valid_codes.append(code)
+            used_codes.append(code)
+    return valid_codes
 
 #@redirect_authenticated_user
 #@api_view(['POST'])
