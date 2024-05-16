@@ -3,15 +3,12 @@
 
 {%block contents%}
 {% if worktime_entries %}
-{% if user.is_company == 1 and  user.is_worker == 0%}
+{% if user.is_company == 1 or user.is_manager == 1%}
 <h2>Username: {{ worker.user.username }}</h2>
 <h2>Employed by: {{ worker.company.name }}</h2>
 <h2>Kiosk Code: {{ worker.kiosk_code }}</h2>
 <h2>Firstname: {{ worker.firstname }}</h2>
 <h2>Lastname: {{ worker.lastname }}</h2>
-
-
-<!-- Add more user attributes as needed -->
 
 <h2>Worktime Entries:</h2>
 
@@ -47,6 +44,7 @@
 {% endif %}
 {% else %}
     <p>No worktime entries available.</p>
+    <button type="button" onclick="javascript:history.back()">Back to Employees</button>
 {% endif %}
 
 

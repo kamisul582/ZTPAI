@@ -198,9 +198,11 @@ def add_worktime(request, worker=None):
             existing_entry.total_time = existing_entry.punch_out - existing_entry.punch_in
             existing_entry.total_time = timedelta(seconds=round(existing_entry.total_time.total_seconds()))
             existing_entry.save()
+            print("existing")
             return JsonResponse({'status': 'success'})
         new_entry = Worktime(worker=worker, punch_in=timezone.now(), date=timezone.now().date())
         new_entry.save()
+        print("new")
         return JsonResponse({'status': 'success', 'entry_id': new_entry.id})
 
 
@@ -236,7 +238,7 @@ def update_worktime_by_kiosk_code(request):
             response_data = response.content.decode("UTF-8")
             worker_info = f"{worker.firstname} {worker.lastname}"
             if 'entry_id' in response_data:
-                return ({'status': 'success', 'message':
+                return JsonResponse({'status': 'success', 'message':
                                      "Successfully created a new worktime entry for: ", 'worker': worker_info})
             return JsonResponse({'status': 'success', 'message':
                                  "Successfully updated an existing worktime entry for: ", 'worker': worker_info})
@@ -383,9 +385,12 @@ class RegistrationWizardView(MyWizard):
 
     def done(self, form_list, **kwargs):
         data = {}
+        print(form_list)
         for form in form_list:
+            print(form)
             data.update(form.cleaned_data)
-
+        return self.create_user(data)
+    def create_user(self, data):
         user = CustomUser.objects.create_user(
             username=data['username'],
             email=data['email'],

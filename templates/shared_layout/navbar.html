@@ -19,7 +19,7 @@
           <a class="nav-link" href="{%url 'attendance:charts'%}">Charts</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{%url 'attendance:upload_file'%}">Create Employee Accounts</a>
+          <a class="nav-link" href="{%url 'attendance:upload_file'%}">Create Accounts</a>
         </li>
         {%endif%}
         {%if user.is_manager and user.is_authenticated%}
@@ -52,4 +52,3 @@
       </ul>
     </div>
   </nav>
-  

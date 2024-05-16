@@ -27,7 +27,7 @@ class WorktimeExportView(View):
             month = int(request.GET.get('month'))
             year = int(request.GET.get('year'))
             worker = request.GET.get('worker')
-            worker_id=int(worker[0]) if worker else ""
+            worker_id=int(worker.split(".")[0]) if worker else ""
             start_date = datetime(year, month, 1)
             end_date = datetime(year, month % 12 + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
             workers = get_employed_user_ids(request) #get all manager subordinates or company employees

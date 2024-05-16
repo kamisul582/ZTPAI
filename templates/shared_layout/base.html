@@ -18,25 +18,25 @@
     <style>
         #worktime_table_container, #employees_table_container  {
         overflow-y: auto;
-        border: 1px solid #ccc; 
+         
     }
     #worktime_table_container{
         max-height: 300px;
     }
     #employees_table_container  {
-        max-height: 400px;
+        max-height: 600px;
     }
 
     #worktime_table, #employees_table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse:separate;
+        border:solid white 1px;
+        border-radius:6px;
     }
     
-    
-    #worktime_table th, #employees_table th, #worktime_table th, #employees_table td {
-        border: 1px solid #ddd; 
+    #worktime_table th, #employees_table th, #worktime_table td, #employees_table td {
         padding: 8px;
-        text-align: left;
+        text-align: center;
     }
         
     html, body {
@@ -78,6 +78,10 @@
     text-align: left;
     color: white;
     }
+    #nav-item{
+        color: white !important;
+    }
+    
     a:link,a:visited{
         color: white;
     }
@@ -117,6 +121,14 @@
     width: calc(900px - 35px);
     height: 500px;
 }
+button,select{
+    border-radius: 8px;
+}
+
+.nav-link{
+    color: white !important;
+}
+
     
     </style>
     {%endblock customcss%}
