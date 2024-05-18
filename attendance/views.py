@@ -34,10 +34,13 @@ from rest_framework.decorators import api_view
 from django.core.serializers import serialize
 from django.db.models import Q
 from datetime import timedelta
+from django.conf import settings
 
+EMAIL_ACTIVATION = getattr(settings, "EMAIL_ACTIVATION", True)
 
 @only_authenticated_user
 def home_view(request):
+    print(request)
     user = CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
@@ -342,7 +345,7 @@ STEP_FOUR = u'3'
 
 
 class MyWizard(SessionWizardView):
-
+    #name = 'registration_wizard_view'
     def return_true(wizard):
         return True
 
@@ -357,6 +360,7 @@ class MyWizard(SessionWizardView):
                 return False
 
     def check_step_three(wizard):
+        
         step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
         if step_1_info:
             if step_1_info['registration_choice'] == 'worker' or step_1_info['registration_choice'] == 'manager':
@@ -384,6 +388,7 @@ class RegistrationWizardView(MyWizard):
     template_name = 'attendance/wizard_form.html'
 
     def done(self, form_list, **kwargs):
+        #print(self.request)
         data = {}
         print(form_list)
         for form in form_list:
@@ -406,7 +411,8 @@ class RegistrationWizardView(MyWizard):
             )
             user.is_company = True
             user.save()
-            activateEmail(self.request, user, data['email'])
+            if EMAIL_ACTIVATION:
+                activateEmail(self.request, user, data['email'])
             return redirect('attendance:login')
         elif data['registration_choice'] == 'worker' or data['registration_choice'] == 'manager':
 
@@ -421,7 +427,8 @@ class RegistrationWizardView(MyWizard):
             if data['registration_choice'] == 'manager':
                 user.is_manager = True
             user.save()
-            activateEmail(self.request, user, data['email'])
+            if EMAIL_ACTIVATION:
+                activateEmail(self.request, user, data['email'])
             return redirect('attendance:login')
         else:
             return render(self.request, 'attendance/registration_error.html')
@@ -434,7 +441,6 @@ def generate_kiosk_codes(company,amount = 1):
     i = 0
     while i < 1000 and len(valid_codes) < amount:
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        print("used_codes", used_codes)
         if code in used_codes:
             i += 1
         else:

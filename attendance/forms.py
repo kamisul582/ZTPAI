@@ -34,29 +34,6 @@ class KioskCodeForm(forms.Form):
         attrs={'class': 'form-control', 'placeholder': 'Kiosk Code', 'id': 'kiosk_code_'}))
 
 
-class AddDataForm(forms.Form):
-    firstname = forms.CharField(max_length=256, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Firstname'}))
-    lastname = forms.CharField(max_length=256, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Lastname'}))
-    company = forms.CharField(max_length=256, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'placeholder': 'Company'}))
-
-    def clean_firstname(self):
-        return self.cleaned_data['firstname']
-
-    def clean_lastname(self):
-        return self.cleaned_data['lastname']
-
-    def clean_company(self):
-        return self.cleaned_data['company']
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if get_user_model().objects.filter(email=email).exists():
-            raise ValidationError("This email address is already exists.")
-        return email
-
 
 class RegistrationChoiceForm(forms.Form):
     registration_choice = forms.ChoiceField(

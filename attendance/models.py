@@ -10,20 +10,18 @@ class CustomUser(AbstractUser):
     is_company = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False)
     password_change_required = models.BooleanField(default=False)
-    # Add related_name to avoid clashes
-    groups = models.ManyToManyField(
-        Group,
-        verbose_name=_('groups'),
-        blank=True,
-        help_text=_(
-            'The groups this user belongs to. A user will get all permissions '
-            'granted to each of their groups.'
-        ),
-        related_name='customuser_groups',
-        related_query_name='customuser_group',)
+    #groups = models.ManyToManyField(
+    #    Group,
+    #    verbose_name=_('groups'),
+    #    blank=True,
+    #    help_text=_(
+    #        'The groups this user belongs to. A user will get all permissions '
+    #        'granted to each of their groups.'
+    #    ),
+    #    related_name='customuser_groups',
+    #    related_query_name='customuser_group',)
 
     def save(self, *args, **kwargs):
-        # Ensure that a user can only be a worker or a company, not both
         if self.is_worker:
             self.is_company = False
         elif self.is_company:
@@ -42,12 +40,12 @@ class Company(models.Model):
         return f"{self.id} {self.user} {self.name} {self.address}"
 
 
-@receiver(post_save, sender=CustomUser)
-def create_or_update_company(sender, instance, created, **kwargs):
-    if created and instance.is_company:
-        Company.objects.create(user=instance)
-    elif not created and instance.is_company:
-        instance.company.save()
+#@receiver(post_save, sender=CustomUser)
+#def create_or_update_company(sender, instance, created, **kwargs):
+#    if created and instance.is_company:
+#        Company.objects.create(user=instance)
+#    elif not created and instance.is_company:
+#        instance.company.save()
 
 
 class Worker(models.Model):

@@ -26,6 +26,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 #DEBUG = False
+EMAIL_ACTIVATION = False
 SECURE_SSL_REDIRECT = False
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 GRAPH_MODELS = {
