@@ -4,12 +4,15 @@
 {%block contents%}
 
 {% if user.is_company == 0 and  user.is_worker == 1 or user.is_manager == 1%}
+
 <h2>Username: {{ user.username }}</h2>
+{% if worker %}
 <h2>Employed by: {{ worker.company.name }}</h2>
 <h2>Kiosk Code: {{ worker.kiosk_code }}</h2>
 <h2>Firstname: {{ worker.firstname }}</h2>
 <h2>Lastname: {{ worker.lastname }}</h2>
-
+{% endif %}
+<h2>{{error}} </h2>
 {% if worktime_entries %}
 <h2>Worktime Entries:</h2>
 
@@ -84,7 +87,10 @@
     </script>
 
 {% if user.is_company == 1 and user.is_worker == 0%}
+{% if company%}
 <h2>{{ company.name }} Company Profile </h2>
+{% endif %}
+<h2>{{error}} </h2>
 <p><strong>User ID:</strong> {{ user.id }}</p>
 <p><strong>Email:</strong> {{ user.email }}</p>
 
@@ -118,8 +124,8 @@
                     if (data.status === 'success') {
                         // Optional: Display a success message or perform other actions
                         //$('#kiosk_code_form').hide();
-                        $('#kiosk_code_form').val('');
-                        $('#kiosk_code_form')[0].reset();
+                        //$('#kiosk_code_form').val('');
+                        //$('#kiosk_code_form')[0].reset();
                         document.getElementById("kiosk_code_form").reset();
                         $('#alert').html('<div class="alert alert-success">'  + data.message + data.worker + '</div>').show();
                         console.log(data);

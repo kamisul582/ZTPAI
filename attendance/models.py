@@ -10,16 +10,6 @@ class CustomUser(AbstractUser):
     is_company = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False)
     password_change_required = models.BooleanField(default=False)
-    #groups = models.ManyToManyField(
-    #    Group,
-    #    verbose_name=_('groups'),
-    #    blank=True,
-    #    help_text=_(
-    #        'The groups this user belongs to. A user will get all permissions '
-    #        'granted to each of their groups.'
-    #    ),
-    #    related_name='customuser_groups',
-    #    related_query_name='customuser_group',)
 
     def save(self, *args, **kwargs):
         if self.is_worker:
@@ -27,7 +17,6 @@ class CustomUser(AbstractUser):
         elif self.is_company:
             self.is_worker = False
             self.is_manager = False
-
         super().save(*args, **kwargs)
 
 

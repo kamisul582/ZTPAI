@@ -1,24 +1,23 @@
-from django.test import TestCase, Client
-from .models import CustomUser,Company,Worker
-from .views import RegistrationWizardView
-from .forms import CustomLoginForm,RegistrationChoiceForm,CustomUserCreationForm,RegisterCompanyForm,RegisterWorkerForm
+from django.test import TestCase, Client, RequestFactory
+from django.contrib.messages.storage.fallback import FallbackStorage
+from .models import CustomUser,Company,Worker,Worktime
+from .views import RegistrationWizardView,generate_kiosk_codes,reset_new_password_view
+from .forms import ChangePasswordForm,CustomLoginForm,RegistrationChoiceForm,CustomUserCreationForm,RegisterCompanyForm,RegisterWorkerForm
 from django.urls import reverse
+from django.contrib import messages
+from rest_framework.test import APIClient
+from django.contrib.auth.hashers import check_password
 class userTestCase(TestCase):
     def setUp(self):
-        #CustomUser.objects.create(username="bsmith",email="bsmith@alasfc.ca",password="asdasqweqwe")
         wizard = RegistrationWizardView()
         company_data = {'registration_choice':'company','username':'compuser','email':'compmail@alasfc.ca','password1':'asdasqwaaeqwe','name':'BigCompany','address':'Polna 142'}
         wizard.create_user(company_data)
         company = Company.objects.get(id=1)
         worker_data = {'registration_choice':'worker','username':'bsmith1','email':'bsmith@alasfc.ca','password1':'asdasqweqwe','firstname':'bob','lastname':'smith','company':company}
         wizard.create_user(worker_data)
-        #response = self.client.get('/')
-        #request = response.wsgi_request
-        #print(request,response)
     def test_user_data(self):
         
         user = CustomUser.objects.get(username="bsmith1")
-        #response = self.client.post("/login/", {'something':'something'})
         self.assertEqual(user.is_company,False)
         self.assertEqual(user.email,"bsmith@alasfc.ca")
     def test_worker_data(self):
@@ -30,41 +29,39 @@ class userTestCase(TestCase):
 class CustomLoginFormTest(TestCase):
     def setUp(self):
         # Create a user for testing
-        self.user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='password123')
+        self.user = CustomUser.objects.create_user(username='testuser', email='testuser@example.com', password='QWERTYqwerty12345')
 
     def test_clean_username_or_email_with_username(self):
-        form = CustomLoginForm(data={'username_or_email': 'testuser', 'password': 'password123'})
+        form = CustomLoginForm(data={'username_or_email': 'testuser', 'password': 'QWERTYqwerty12345'})
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['username_or_email'], 'testuser')
 
     def test_clean_username_or_email_with_email(self):
-        form = CustomLoginForm(data={'username_or_email': 'testuser@example.com', 'password': 'password123'})
+        form = CustomLoginForm(data={'username_or_email': 'testuser@example.com', 'password': 'QWERTYqwerty12345'})
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['username_or_email'], 'testuser@example.com')
 
     def test_clean_username_or_email_invalid(self):
-        form = CustomLoginForm(data={'username_or_email': 'nonexistentuser', 'password': 'password123'})
+        form = CustomLoginForm(data={'username_or_email': 'nonexistentuser', 'password': 'QWERTYqwerty12345'})
         self.assertFalse(form.is_valid())
         self.assertIn('username_or_email', form.errors)
         print(form.errors)
         self.assertEqual(form.errors['username_or_email'], ['This username does not exist'])
 
     def test_clean_username_or_email_invalid_email(self):
-        form = CustomLoginForm(data={'username_or_email': 'nonexistentuser@example.com', 'password': 'password123'})
+        form = CustomLoginForm(data={'username_or_email': 'nonexistentuser@example.com', 'password': 'QWERTYqwerty12345'})
         self.assertFalse(form.is_valid())
         self.assertIn('username_or_email', form.errors)
         print(form.errors)
         self.assertEqual(form.errors['username_or_email'], ['This email does not exist'])
-
 STEP_ONE = u'0'
 STEP_TWO = u'1'
 STEP_THREE = u'2'
 STEP_FOUR = u'3'
-
 class RegistrationWizardViewTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.url = '/register/'  # Update this URL to the actual path of your registration wizard
+        self.url = '/register/'
 
     def get_wizard_management_data(self, current_step):
         """Returns the management data for the given step."""
@@ -75,6 +72,25 @@ class RegistrationWizardViewTest(TestCase):
     def test_step_one_choice_company(self):
         data = {
             '0-registration_choice': 'company',
+        }
+        data.update(self.get_wizard_management_data(STEP_ONE))
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('form', response.context['wizard'])
+        self.assertIsInstance(response.context['wizard']['form'], CustomUserCreationForm)
+
+    def test_step_one_choice_worker(self):
+        data = {
+            '0-registration_choice': 'worker',
+        }
+        data.update(self.get_wizard_management_data(STEP_ONE))
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('form', response.context['wizard'])
+        self.assertIsInstance(response.context['wizard']['form'], CustomUserCreationForm)
+    def test_step_one_choice_manager(self):
+        data = {
+            '0-registration_choice': 'manager',
         }
         data.update(self.get_wizard_management_data(STEP_ONE))
         response = self.client.post(self.url, data)
@@ -94,15 +110,65 @@ class RegistrationWizardViewTest(TestCase):
         # Step 2: Submit user creation form
         step_two_data = {
             '1-username': 'companyuser',
-            '1-password1': 'password123',
-            '1-password2': 'password123',
+            '1-password1': 'QWERTYqwerty12345',
+            '1-password2': 'QWERTYqwerty12345',
         }
         step_two_data.update(self.get_wizard_management_data(STEP_TWO))
         response = self.client.post(self.url, step_two_data)
+        if response.status_code != 200:
+            print("Step 2 Errors: ", response.context['wizard']['form'].errors)
+        
         self.assertEqual(response.status_code, 200)
         self.assertIn('form', response.context['wizard'])
         self.assertIsInstance(response.context['wizard']['form'], RegisterCompanyForm)
 
+    def test_step_two_worker_registration(self):
+        # Step 1: Choose company registration
+        step_one_data = {
+            '0-registration_choice': 'worker',
+        }
+        step_one_data.update(self.get_wizard_management_data(STEP_ONE))
+        response = self.client.post(self.url, step_one_data)
+        self.assertEqual(response.status_code, 200)
+        
+        # Step 2: Submit user creation form
+        step_two_data = {
+            '1-username': 'workeruser',
+            '1-password1': 'QWERTYqwerty12345',
+            '1-password2': 'QWERTYqwerty12345',
+        }
+        step_two_data.update(self.get_wizard_management_data(STEP_TWO))
+        response = self.client.post(self.url, step_two_data)
+        if response.status_code != 200:
+            print("Step 2 Errors: ", response.context['wizard']['form'].errors)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('form', response.context['wizard'])
+        self.assertIsInstance(response.context['wizard']['form'], RegisterWorkerForm)
+
+    def test_step_two_manager_registration(self):
+        # Step 1: Choose company registration
+        step_one_data = {
+            '0-registration_choice': 'worker',
+        }
+        step_one_data.update(self.get_wizard_management_data(STEP_ONE))
+        response = self.client.post(self.url, step_one_data)
+        self.assertEqual(response.status_code, 200)
+        
+        # Step 2: Submit user creation form
+        step_two_data = {
+            '1-username': 'manageruser',
+            '1-password1': 'QWERTYqwerty12345',
+            '1-password2': 'QWERTYqwerty12345',
+        }
+        step_two_data.update(self.get_wizard_management_data(STEP_TWO))
+        response = self.client.post(self.url, step_two_data)
+        if response.status_code != 200:
+            print("Step 2 Errors: ", response.context['wizard']['form'].errors)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('form', response.context['wizard'])
+        self.assertIsInstance(response.context['wizard']['form'], RegisterWorkerForm)
     def test_step_three_company_registration(self):
         # Step 1: Choose company registration
         step_one_data = {
@@ -115,8 +181,8 @@ class RegistrationWizardViewTest(TestCase):
         # Step 2: Submit user creation form
         step_two_data = {
             '1-username': 'companyuser',
-            '1-password1': 'password123',
-            '1-password2': 'password123',
+            '1-password1': 'QWERTYqwerty12345',
+            '1-password2': 'QWERTYqwerty12345',
         }
         step_two_data.update(self.get_wizard_management_data(STEP_TWO))
         response = self.client.post(self.url, step_two_data)
@@ -129,14 +195,17 @@ class RegistrationWizardViewTest(TestCase):
         }
         step_three_data.update(self.get_wizard_management_data(STEP_THREE))
         response = self.client.post(self.url, step_three_data)
-        self.assertEqual(response.status_code, 200)  # Should redirect after successful registration
+        if response.status_code == 200:
+            print("Step 3 Errors: ", response.context['wizard']['form'].errors)
+        
+        self.assertEqual(response.status_code, 302)  # Should redirect after successful registration
+
         self.assertTrue(CustomUser.objects.filter(username='companyuser').exists())
         self.assertTrue(Company.objects.filter(name='Test Company').exists())
 
     def test_step_three_worker_registration(self):
         # Create a company for the worker to register under
-        company = Company.objects.create(user=CustomUser.objects.create_user(username='company', password='password123'), name='Test Company')
-
+        company = Company.objects.create(user=CustomUser.objects.create(email='testcompany@example.test',username='company', password='QWERTYqwerty12345'), name='Test Company',address='Polna 13')
         # Step 1: Choose worker registration
         step_one_data = {
             '0-registration_choice': 'worker',
@@ -148,21 +217,158 @@ class RegistrationWizardViewTest(TestCase):
         # Step 2: Submit user creation form
         step_two_data = {
             '1-username': 'workeruser',
-            '1-password1': 'password123',
-            '1-password2': 'password123',
+            '1-password1': 'QWERTYqwerty12345',
+            '1-password2': 'QWERTYqwerty12345',
         }
         step_two_data.update(self.get_wizard_management_data(STEP_TWO))
         response = self.client.post(self.url, step_two_data)
+        if response.status_code != 200:
+            print("Step 2 Errors: ", response.context['wizard']['form'].errors)
+        
         self.assertEqual(response.status_code, 200)
 
         # Step 3: Submit worker registration form
         step_three_data = {
-            '2-company': company.id,
-            '2-firstname': 'John',
-            '2-lastname': 'Doe',
+            '3-company': company.pk,
+            '3-firstname': 'John',
+            '3-lastname': 'Doe',
         }
-        step_three_data.update(self.get_wizard_management_data(STEP_THREE))
+        step_three_data.update(self.get_wizard_management_data(STEP_FOUR))
         response = self.client.post(self.url, step_three_data)
-        self.assertEqual(response.status_code, 200)  # Should redirect after successful registration
+        
+        # Add logging to print form errors if the status code is 200
+        if response.status_code == 200:
+            print("Step 3 Errors: ", response.context['wizard']['form'].errors)
+            print("Step 3 Form: ", response.context['wizard']['form'])
+        
+        self.assertEqual(response.status_code, 302)  # Should redirect after successful registration
+
         self.assertTrue(CustomUser.objects.filter(username='workeruser').exists())
         self.assertTrue(Worker.objects.filter(firstname='John', lastname='Doe').exists())
+    def test_step_three_manager_registration(self):
+            # Create a company for the worker to register under
+            company = Company.objects.create(user=CustomUser.objects.create(email='testcompany@example.test',username='company', password='QWERTYqwerty12345'), name='Test Company',address='Polna 13')
+            # Step 1: Choose worker registration
+            step_one_data = {
+                '0-registration_choice': 'manager',
+            }
+            step_one_data.update(self.get_wizard_management_data(STEP_ONE))
+            response = self.client.post(self.url, step_one_data)
+            self.assertEqual(response.status_code, 200)
+
+            # Step 2: Submit user creation form
+            step_two_data = {
+                '1-username': 'manageruser',
+                '1-password1': 'QWERTYqwerty12345',
+                '1-password2': 'QWERTYqwerty12345',
+            }
+            step_two_data.update(self.get_wizard_management_data(STEP_TWO))
+            response = self.client.post(self.url, step_two_data)
+            if response.status_code != 200:
+                print("Step 2 Errors: ", response.context['wizard']['form'].errors)
+
+            self.assertEqual(response.status_code, 200)
+
+            # Step 3: Submit worker registration form
+            step_three_data = {
+                '3-company': company.pk,
+                '3-firstname': 'John',
+                '3-lastname': 'Doe',
+            }
+            step_three_data.update(self.get_wizard_management_data(STEP_FOUR))
+            response = self.client.post(self.url, step_three_data)
+
+            # Add logging to print form errors if the status code is 200
+            if response.status_code == 200:
+                print("Step 3 Errors: ", response.context['wizard']['form'].errors)
+                print("Step 3 Form: ", response.context['wizard']['form'])
+
+            self.assertEqual(response.status_code, 302)  # Should redirect after successful registration
+
+            self.assertTrue(CustomUser.objects.filter(username='manageruser').exists())
+            self.assertTrue(Worker.objects.filter(firstname='John', lastname='Doe').exists())
+
+class AddWorktimeTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        company = Company.objects.create(user=CustomUser.objects.create(email='testcompany@example.test',username='company', password='QWERTYqwerty12345'), name='Test Company',address='Polna 13')
+        worker = Worker.objects.create(user=CustomUser.objects.create(email='testworker@example.test',username='worker', password='QWERTYqwerty12345',is_worker=True), company_id =1,firstname='Test',lastname='Worker',kiosk_code='ABC123')
+        self.user = CustomUser.objects.get(username='worker')
+        self.client.force_login(self.user)
+        self.url = '/add-worktime/'
+    
+    def test_add_worktime_existing_entry(self):
+        existing_entry = Worktime.objects.create(worker=Worker.objects.get(user_id=self.user.id), punch_in='2024-05-20T09:00:00Z')
+        response = self.client.post(self.url, {'user_id': self.user.id})
+        print(response,response.content,response.context)
+        self.assertEqual(response.status_code, 200)
+        # Check that the existing entry's punch_out has been updated
+        existing_entry.refresh_from_db()
+        self.assertIsNotNone(existing_entry.punch_out)
+
+    def test_add_worktime_new_entry(self):
+        response = self.client.post(self.url, {'user_id': self.user.id})
+        self.assertEqual(response.status_code, 200)
+        # Check that a new Worktime entry has been created
+        new_entry = Worktime.objects.filter(worker=Worker.objects.get(user_id=self.user.id)).latest('id')
+        self.assertIsNotNone(new_entry)
+
+class GenerateKioskCodesTest(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(user=CustomUser.objects.create(email='testcompany@example.test',username='company', password='QWERTYqwerty12345'), name='Test Company',address='Polna 13')
+        self.worker = Worker.objects.create(user=CustomUser.objects.create(email='testworker@example.test',username='worker', password='QWERTYqwerty12345',is_worker=True), company_id =1,firstname='Test',lastname='Worker',kiosk_code='ABC123')
+    def test_uniqueness(self):
+        codes = generate_kiosk_codes(self.company,500)
+        self.assertTrue(len(codes),len(codes) == len(set(codes)))
+    def test_amount(self):
+        amount = 500
+        codes = generate_kiosk_codes(self.company,amount)
+        self.assertEquals(amount,len(codes))
+class ResetNewPasswordViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.factory = RequestFactory()
+        self.user = CustomUser.objects.create_user(email='test@example.com',username='testuser', password='oldpassword')
+        self.url = '/change-password/'
+    def test_post_valid_form(self):
+        # Prepare valid form data
+        data = {
+            'email': 'test@example.com',
+            'new_password1': 'QWERTYqwerty12345',
+            'new_password2': 'QWERTYqwerty12345',
+        }
+        request = self.factory.post(self.url, data)
+        request.user = self.user
+
+        # Call the view function
+        response = reset_new_password_view(request)
+
+        # Check if the password is updated
+        updated_user = CustomUser.objects.get(email='test@example.com')
+        self.assertTrue(check_password('QWERTYqwerty12345', updated_user.password))
+
+        # Check if the view redirects to the login page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('attendance:login'))
+
+    def test_post_invalid_form(self):
+        # Make a POST request with invalid form data
+        data = {
+            'email': 'test@example.com',
+            'new_password1': 'short',
+            'new_password2': 'short',
+        }
+        request = self.factory.post(self.url, data)
+        request.user = self.user
+
+        # Call the view function
+        response = reset_new_password_view(request)
+        self.assertContains(response, 'This password is too short.')
+
+    def test_get_request(self):
+        # Make a GET request
+        response = self.client.get(self.url)
+        
+        # Check if the view renders the form
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response.context['form'], ChangePasswordForm)

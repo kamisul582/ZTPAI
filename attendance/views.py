@@ -15,7 +15,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
-from attendance.admin import CustomUserCreationForm
+#from attendance.admin import CustomUserCreationForm
 from .forms import (
     CustomLoginForm,
     ChangePasswordForm,
@@ -23,7 +23,8 @@ from .forms import (
     RegisterCompanyForm,
     RegisterWorkerForm,
     RegistrationChoiceForm,
-    AddSubordinateForm
+    AddSubordinateForm,
+    CustomUserCreationForm
 )
 from .models import CustomUser, Worktime, Company, Worker
 from .decorators import only_authenticated_user, redirect_authenticated_user
@@ -41,22 +42,21 @@ EMAIL_ACTIVATION = getattr(settings, "EMAIL_ACTIVATION", True)
 @only_authenticated_user
 def home_view(request):
     print(request)
-    user = CustomUser.objects.filter(username=request.user.username)
     user_id = request.user.id
     user = get_object_or_404(CustomUser, id=user_id)
-    error = None
-    if user.is_worker or user.is_manager:
+    if user.is_worker:
         try:
             worker = Worker.objects.get(user_id=user_id)
         except ObjectDoesNotExist:
-            return render(request, 'attendance/home.html', {'users': user, 'user_id': user_id})
-
+            return render(request, 'attendance/home.html', {'users': user, 'user_id': user_id,'error':'Worker not found'})
         worktime_entries = Worktime.objects.filter(worker=worker)
         return render(request, 'attendance/home.html',
                       {'users': user, 'user_id': user_id, 'worker': worker, 'worktime_entries': worktime_entries})
-
     if user.is_company:
-        company = Company.objects.get(user_id=user_id)
+        try:
+            company = Company.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return render(request, 'attendance/home.html', {'users': user,'error':'Company not found'})
         form = KioskCodeForm()
         return render(request, 'attendance/home.html', {'users': user, 'company': company, 'user_id': user_id, 'form': form})
     return redirect('attendance:logout')
@@ -258,23 +258,19 @@ def login_view(request):
         form = CustomLoginForm()
         return render(request, 'attendance/login.html', {'form': form, 'error': error})
     form = CustomLoginForm(request.POST)
-    #print("data",form.cleaned_data['username_or_email'], form.cleaned_data['password'])
     if not form.is_valid():
         error = 'Invalid Credentials'
-        print("invalid")
         return render(request, 'attendance/login.html', {'form': form, 'error': error})
     user = authenticate(
         request, username=form.cleaned_data['username_or_email'], password=form.cleaned_data['password'])
     if user:
-        print("user")
         if user.is_active:
-            print("active")
             login(request, user)
             return redirect('attendance:home')
         activateEmail(request, user, user.email)
         error = f'Account is not active. Activation email was sent to {user.email}' 
         return render(request, 'attendance/login.html', {'form': form, 'error': error})
-    error = 'Authentication error'
+    error = 'Invalid Credentials'
     return render(request, 'attendance/login.html', {'form': form, 'error': error})
 
 
@@ -345,35 +341,22 @@ STEP_FOUR = u'3'
 
 
 class MyWizard(SessionWizardView):
-    #name = 'registration_wizard_view'
+    # name = 'registration_wizard_view'
+
+    @staticmethod
     def return_true(wizard):
         return True
 
-    def check_step_two(wizard):
+    @staticmethod
+    def check_step(wizard, valid_choices):
         step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
-        # Do something with info; can retrieve for any prior steps
-        if step_1_info:
-            if step_1_info['registration_choice'] == 'company':
-                print("step_1_info", step_1_info)
-                return True
-            else:
-                return False
-
-    def check_step_three(wizard):
-        
-        step_1_info = wizard.get_cleaned_data_for_step(STEP_ONE)
-        if step_1_info:
-            if step_1_info['registration_choice'] == 'worker' or step_1_info['registration_choice'] == 'manager':
-                print("step_1_info", step_1_info)
-                return True
-            else:
-                return False
+        return step_1_info and step_1_info['registration_choice'] in valid_choices
 
     condition_dict = {
-        STEP_ONE: return_true,
-        STEP_TWO: return_true,
-        STEP_THREE: check_step_two,
-        STEP_FOUR: check_step_three,
+        STEP_ONE: lambda wizard: True,
+        STEP_TWO: lambda wizard: True,
+        STEP_THREE: lambda wizard: MyWizard.check_step(wizard, ['company']),
+        STEP_FOUR: lambda wizard: MyWizard.check_step(wizard, ['worker', 'manager']),
     }
 
     form_list = [
@@ -388,11 +371,8 @@ class RegistrationWizardView(MyWizard):
     template_name = 'attendance/wizard_form.html'
 
     def done(self, form_list, **kwargs):
-        #print(self.request)
         data = {}
-        print(form_list)
         for form in form_list:
-            print(form)
             data.update(form.cleaned_data)
         return self.create_user(data)
     def create_user(self, data):
@@ -402,37 +382,38 @@ class RegistrationWizardView(MyWizard):
             password=data['password1']
         )
         user.is_active = False
-
         if data['registration_choice'] == 'company':
-            Company.objects.create(
+            return self.create_company(user,data)
+        elif data['registration_choice'] == 'worker' or data['registration_choice'] == 'manager':
+            return self.create_worker(user,data)
+        else:
+            return render(self.request, 'attendance/registration_error.html')
+    def create_company(self,user,data):
+        Company.objects.create(
                 user=user,
                 name=data['name'],
                 address=data['address']
             )
-            user.is_company = True
-            user.save()
-            if EMAIL_ACTIVATION:
-                activateEmail(self.request, user, data['email'])
-            return redirect('attendance:login')
-        elif data['registration_choice'] == 'worker' or data['registration_choice'] == 'manager':
-
-            Worker.objects.create(
+        user.is_company = True
+        user.save()
+        if EMAIL_ACTIVATION:
+            activateEmail(self.request, user, data['email'])
+        return redirect('attendance:login')
+    def create_worker(self,user,data):
+        Worker.objects.create(
                 user=user,
                 company=data['company'],
                 firstname=data['firstname'],
                 lastname=data['lastname'],
                 kiosk_code=generate_kiosk_codes(company=data['company'])[0]
             )
-            user.is_worker = True
-            if data['registration_choice'] == 'manager':
-                user.is_manager = True
-            user.save()
-            if EMAIL_ACTIVATION:
-                activateEmail(self.request, user, data['email'])
-            return redirect('attendance:login')
-        else:
-            return render(self.request, 'attendance/registration_error.html')
-
+        user.is_worker = True
+        if data['registration_choice'] == 'manager':
+            user.is_manager = True
+        user.save()
+        if EMAIL_ACTIVATION:
+            activateEmail(self.request, user, data['email'])
+        return redirect('attendance:login')
 
 def generate_kiosk_codes(company,amount = 1):
     workers = Worker.objects.filter(company=company)
@@ -451,6 +432,7 @@ def generate_kiosk_codes(company,amount = 1):
 #@redirect_authenticated_user
 #@api_view(['POST'])
 def reset_new_password_view(request):
+
     if request.method == 'POST':
         form = ChangePasswordForm(request.POST)
         if form.is_valid():
@@ -458,8 +440,6 @@ def reset_new_password_view(request):
             user = CustomUser.objects.get(email=email)
             user.password = make_password(form.cleaned_data["new_password2"])
             user.save()
-            messages.success(request, _(
-                "Your password changed. Now you can login with your new password."))
             return redirect('attendance:login')
     else:
         form = ChangePasswordForm()

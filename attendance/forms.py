@@ -42,16 +42,19 @@ class RegistrationChoiceForm(forms.Form):
     )
 
 
+#class CustomUserCreationForm(UserCreationForm):
+#    class Meta:
+#        model = CustomUser
+#        fields = UserCreationForm.Meta.fields
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
-        fields = UserCreationForm.Meta.fields
-
+        fields = UserCreationForm.Meta.fields + ('email',)
 
 class RegisterCompanyForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'address']  # Add company-specific fields here
+        fields = ['name', 'address']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
             'address': forms.Textarea(attrs={'class': 'custom-class-for-address', 'rows': 3}),
@@ -68,12 +71,16 @@ class AddSubordinateForm(forms.Form):
 class RegisterWorkerForm(forms.ModelForm):
     class Meta:
         model = Worker
-        fields = ['company', 'firstname', 'lastname',]  # Add worker-specific fields here
+        fields = ['company', 'firstname', 'lastname',]
         widgets = {
             'firstname': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
             'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
         }
-
+#class RegisterWorkerForm(forms.Form):
+#    company = forms.ModelChoiceField(queryset=Company.objects.all(), required=True)
+#    firstname = forms.CharField(max_length=100, required=True)
+#    lastname = forms.CharField(max_length=100, required=True)
+    
 class FileUploadForm(forms.Form):
     file = forms.FileField()
 
