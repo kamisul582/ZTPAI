@@ -84,6 +84,14 @@ class RegisterWorkerForm(forms.ModelForm):
 class FileUploadForm(forms.Form):
     file = forms.FileField()
 
+    def clean_file(self):
+        uploaded_file = self.cleaned_data.get('file')
+        if uploaded_file:
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            if file_extension not in ['csv', 'json', 'xlsx']:
+                raise forms.ValidationError("Unsupported file format.")
+        return uploaded_file
+
 class ForgetPasswordEmailCodeForm(forms.Form):
     username_or_email = forms.CharField(max_length=256,
                                         widget=forms.TextInput(
@@ -146,3 +154,4 @@ class ChangePasswordForm(forms.Form):
             raise ValidationError(_('Passwords are not match'))
         password_validation.validate_password(password2)
         return password2
+

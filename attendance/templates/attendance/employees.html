@@ -9,6 +9,7 @@
 {% if user.is_company == 1 or user.is_manager%}
 <p><strong>User ID:</strong> {{ user.id }}</p>
 <p><strong>Email:</strong> {{ user.email }}</p>
+{{error}}
 <div id="employees_table_container">
     <table id="employees_table">
         <form method="get" action="{% url 'attendance:get_employees' %}">

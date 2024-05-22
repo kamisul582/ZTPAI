@@ -17,14 +17,6 @@ class LineChartJSONView(BaseLineChartView):
 
         return labels_from_model
 
-    def get_providers(self):
-        return ["Employee worktime"]
-    
-    def get_colors(self):
-        colors = [(54, 162, 235)]
-        return iter(colors)
-
-    
     def get_data(self):
         user_id = self.request.GET.get('user_id')
         try:
@@ -35,5 +27,11 @@ class LineChartJSONView(BaseLineChartView):
         name_data = [entry.name for entry in Company.objects.all()]
         return [total_time]
 
+    def get_providers(self):
+        return ["Employee worktime"]
+    
+    def get_colors(self):
+        colors = [(54, 162, 235)]
+        return iter(colors)
 template = TemplateView.as_view(template_name='attendance/charts.html')
 line_chart_json = LineChartJSONView.as_view()

@@ -124,12 +124,10 @@
     }
         
                 // Populate dropdown with worker information
-                var dropdown = $('#user_id_dropdown');
+    var dropdown = $('#user_id_dropdown');
     dropdown.empty();
     dropdown.append('<option selected="true" disabled>Select Person</option>');
     dropdown.prop('selectedIndex', 0);
-    //var requesting_user_id = "{{ user.id }}";
-    //var url = '/get-user-ids/' + requesting_user_id + '/';
     var url = '{% url "attendance:get_employed_user_ids_json" %}';
     $.getJSON(url, function(data) {
         $.each(data.workers, function(key, worker) {
@@ -141,11 +139,9 @@
         console.error('Failed to fetch worker information.');
     });
 
-    // Event listener for dropdown change
     dropdown.on('change', function() {
         var userId = $(this).val();
         fetchChartData(userId);
-        // Update the <h1> element with selected worker information
         var selectedWorkerText = $('option:selected', this).text();
         $('h1').text('Total worktime of worker: ' + selectedWorkerText);
         

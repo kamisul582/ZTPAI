@@ -63,15 +63,18 @@ def home_view(request):
 
 @only_authenticated_user
 def get_worker_worktime(request, user_id):
-    print("Getting employee worktime")
-    company_user_id = request.user.id
-    company_user = get_object_or_404(CustomUser, id=company_user_id)
+    requesting_user_id = request.user.id
+    requesting_user = get_object_or_404(CustomUser, id=requesting_user_id)
+    employed_users = [worker.user.id for worker in get_employed_worker_ids(request)]
+    if user_id not in employed_users:
+        return redirect('attendance:get_employees')
     try:
         worker = Worker.objects.get(user_id=user_id)
     except ObjectDoesNotExist:
-        return render(request, 'attendance/employee_worktime.html', {'users': company_user, 'user_id': user_id})
+        return render(request, 'attendance/employee_worktime.html', {'users': requesting_user, 'user_id': user_id})
     worktime_entries = Worktime.objects.filter(worker=worker)
-    return render(request, 'attendance/employee_worktime.html', {'user': company_user, 'worker': worker, 'worktime_entries': worktime_entries})
+    return render(request, 'attendance/employee_worktime.html', 
+                  {'user': requesting_user, 'worker': worker, 'worktime_entries': worktime_entries})
 
 
 def get_company_from_user(user_id):
@@ -128,10 +131,8 @@ def add_subordinates(request):
 # @api_view(['GET'])
 def get_employees(request, sort='user_id', filter=''):
     company = get_company_from_user(request.user.id)
-    print(company)
     if not company and not request.user.is_manager:
         return JsonResponse({'error': 'User is not associated with a company'})
-
     sort_param = request.GET.get('sort', 'user_id')
     filter_fields = ['user', 'firstname', 'lastname', 'kiosk_code']
     filter_q, filter_values = build_filter_q(request, filter_fields)
@@ -140,9 +141,7 @@ def get_employees(request, sort='user_id', filter=''):
     if request.user.is_manager:
         manager = get_worker_from_user(request.user.id)
         combined_filter = Q(company=manager.company) & Q(manager=manager) & filter_q
-        print(combined_filter) 
     workers = json.loads(serialize("json", Worker.objects.filter(combined_filter).order_by(sort_param)))
-    print(workers)
     if 'clear_filters' in request.GET:
         return redirect('attendance:get_employees')
 
@@ -173,44 +172,40 @@ def get_employed_user_ids_json(request):
         workers = Worker.objects.filter(manager=manager).values('user_id', 'firstname','lastname')
     print(workers)
     return JsonResponse({'workers': list(workers)})
-def get_employed_user_ids(request):
-    
+
+def get_employed_worker_ids(request):
     company = get_company_from_user(request.user.id)
     if company:
-        #workers = Worker.objects.all().values('user_id', 'firstname','lastname')
         workers = Worker.objects.filter(company=company)
     if request.user.is_manager:
         manager = get_worker_from_user(request.user.id)
         workers = Worker.objects.filter(manager=manager)
     if request.user.is_worker and not request.user.is_manager:
         workers = [get_worker_from_user(request.user.id)]
-    print(workers)
     return workers
+
 @login_required
 @api_view(['POST'])
 def add_worktime(request, worker=None):
-    print("Adding worktime")
+    print("adding worktime")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         if worker is None:
             worker = get_worker_from_user(user_id)
         existing_entry = Worktime.objects.filter(worker=worker, punch_out__isnull=True).first()
-
         if existing_entry:
             existing_entry.punch_out = timezone.now()
             existing_entry.total_time = existing_entry.punch_out - existing_entry.punch_in
             existing_entry.total_time = timedelta(seconds=round(existing_entry.total_time.total_seconds()))
             existing_entry.save()
-            print("existing")
             return JsonResponse({'status': 'success'})
         new_entry = Worktime(worker=worker, punch_in=timezone.now(), date=timezone.now().date())
         new_entry.save()
-        print("new")
         return JsonResponse({'status': 'success', 'entry_id': new_entry.id})
 
 
 @api_view(['GET'])
-def get_worktime_details(entry_id):
+def get_worktime_details(request,entry_id):
     worktime = get_object_or_404(Worktime, id=entry_id)
     data = {
         'date': worktime.date,
@@ -222,20 +217,17 @@ def get_worktime_details(entry_id):
 
 
 @login_required
-# @api_view(['POST'])
 def update_worktime_by_kiosk_code(request):
     print("Updating worktime by kiosk code")
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
         form = KioskCodeForm(request.POST)
-
         if form.is_valid():
             company = Company.objects.get(user_id=user_id)
             kiosk_code = form.cleaned_data['kiosk_code']
             try:
                 worker = Worker.objects.get(company=company, kiosk_code=kiosk_code)
             except ObjectDoesNotExist:
-                print("user not found")
                 return JsonResponse({'status': 'failure', 'message': "Worker with that Kiosk Code was not found."})
             response = add_worktime(request, worker)
             response_data = response.content.decode("UTF-8")
@@ -341,8 +333,6 @@ STEP_FOUR = u'3'
 
 
 class MyWizard(SessionWizardView):
-    # name = 'registration_wizard_view'
-
     @staticmethod
     def return_true(wizard):
         return True

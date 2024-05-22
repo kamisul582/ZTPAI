@@ -60,26 +60,19 @@
             const csrftoken = Cookies.get('csrftoken');
             $.ajax({
                 type: 'POST',
-                url: '{% url "attendance:add_worktime" %}',  // Replace with the actual URL name of your update_worktime view
+                url: '{% url "attendance:add_worktime" %}',
                 data: {
-                    user_id: '{{ user.id }}',  // Replace with the actual user ID or how you obtain it in your context
+                    user_id: '{{ user.id }}',
                     'csrfmiddlewaretoken': csrftoken
                 },
                 dataType: 'json',
                 success: function (data) {
-                    
                     if (data.status === 'success') {
-                        // Optional: Display a success message or perform other actions
                         location.reload();
-                        // Assuming you have an HTML element with the ID 'worktime_table'
-
-                        // Update the table with the new entry
                     } else {
-                        // Handle errors if needed
                     }
                 },
                 error: function () {
-                    // Handle errors if needed
                 }
             });
         });
