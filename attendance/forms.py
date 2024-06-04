@@ -41,11 +41,6 @@ class RegistrationChoiceForm(forms.Form):
         widget=forms.RadioSelect
     )
 
-
-#class CustomUserCreationForm(UserCreationForm):
-#    class Meta:
-#        model = CustomUser
-#        fields = UserCreationForm.Meta.fields
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
@@ -76,10 +71,6 @@ class RegisterWorkerForm(forms.ModelForm):
             'firstname': forms.TextInput(attrs={'class': 'custom-class-for-name'}),
             'lastname': forms.TextInput(attrs={'class': 'custom-class-for-lastname'}),
         }
-#class RegisterWorkerForm(forms.Form):
-#    company = forms.ModelChoiceField(queryset=Company.objects.all(), required=True)
-#    firstname = forms.CharField(max_length=100, required=True)
-#    lastname = forms.CharField(max_length=100, required=True)
     
 class FileUploadForm(forms.Form):
     file = forms.FileField()

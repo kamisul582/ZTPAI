@@ -19,7 +19,6 @@ class CustomUser(AbstractUser):
             self.is_manager = False
         super().save(*args, **kwargs)
 
-
 class Company(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     name = models.TextField(_('name'), max_length=500, blank=True)
@@ -27,15 +26,6 @@ class Company(models.Model):
 
     def __str__(self):
         return f"{self.id} {self.user} {self.name} {self.address}"
-
-
-#@receiver(post_save, sender=CustomUser)
-#def create_or_update_company(sender, instance, created, **kwargs):
-#    if created and instance.is_company:
-#        Company.objects.create(user=instance)
-#    elif not created and instance.is_company:
-#        instance.company.save()
-
 
 class Worker(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
@@ -46,11 +36,8 @@ class Worker(models.Model):
     manager = models.ForeignKey('self', related_name='subordinate', on_delete=models.SET_NULL, blank=True, null=True)
     is_activated = models.BooleanField(default=False)
 
-
     def __str__(self):
         return f"""{self.id}. {self.firstname} {self.lastname}"""
-    
-
 
 class Worktime(models.Model):
     worker = models.ForeignKey(Worker, on_delete=models.CASCADE)

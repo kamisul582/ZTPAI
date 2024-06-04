@@ -1,6 +1,10 @@
-asgiref==3.4.1
-Django==4.0
-django-environ==0.8.1
-Pillow==8.4.0
-sqlparse==0.4.2
-tzdata==2021.5
+Django==3.2.12
+django_chartjs==2.3.0
+django_formtools==2.5.1
+djangorestframework==3.15.1
+drf_yasg==1.21.7
+openpyxl==3.1.2
+pandas==2.2.2
+python-dotenv==1.0.1
+random_password_generator==2.2.0
+XlsxWriter==3.2.0

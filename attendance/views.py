@@ -15,7 +15,6 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
-#from attendance.admin import CustomUserCreationForm
 from .forms import (
     CustomLoginForm,
     ChangePasswordForm,
@@ -122,13 +121,12 @@ def add_subordinates(request):
             print("manager.subordinate.all()",manager.subordinate.all())
             print("Worker.objects.filter(manager=manager)",Worker.objects.filter(manager=manager))
 
-            return redirect('attendance:home')  # Redirect to a success URL
+            return redirect('attendance:home')
     else:
         form = AddSubordinateForm(company=manager.company)
     return render(request, 'attendance/add_subordinates.html', {'form': form, 'manager': manager})
 
 @only_authenticated_user
-# @api_view(['GET'])
 def get_employees(request, sort='user_id', filter=''):
     company = get_company_from_user(request.user.id)
     if not company and not request.user.is_manager:
@@ -308,23 +306,12 @@ def activateEmail(request, user, to_email):
         'protocol': 'https' if request.is_secure() else 'http'
     })
     email = EmailMessage(mail_subject, message, to=[to_email])
-    #if email.send():
-    #    messages.success(request, f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
-    #        received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
-    #else:
-    #    messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
     print(email.subject,email.body,email.to)
     if email.send():
         print("worked")
     return JsonResponse({'status': 'success', 'message':
                                  f'Dear <b>{user}</b>, please go to your email <b>{to_email}</b> inbox and click on \
                                     received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.'})
-    #else:
-    #    print(email,"failed")
-    #    print(email.subject,email.body,email.to)
-    #    print(email.self)
-    #    return JsonResponse({'status': 'success', 'message':
-    #                         f'Problem sending confirmation email to {to_email}, check if you typed it correctly.'})
     
 STEP_ONE = u'0'
 STEP_TWO = u'1'
